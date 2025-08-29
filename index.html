@@ -14,12 +14,14 @@
   button{margin:6px;padding:10px 16px;border-radius:12px;border:none;cursor:pointer;font-size:14px;background:var(--muted);color:var(--text)}
   button:disabled{opacity:.5;cursor:not-allowed}
   input,select{padding:10px 12px;border-radius:12px;border:1px solid var(--muted);background:#0b1224;color:var(--text)}
+  select{appearance:none;background-image:linear-gradient(45deg,transparent 50%,var(--text) 50%),linear-gradient(135deg,var(--text) 50%,transparent 50%),linear-gradient(to right,transparent,transparent);
+         background-position:calc(100% - 20px) 16px, calc(100% - 14px) 16px, 100% 0; background-size:6px 6px,6px 6px, 2.5em 2.5em; background-repeat:no-repeat}
+  label{opacity:.9}
   .screen{display:none}
   .pill{display:inline-flex;align-items:center;background:var(--muted);padding:8px 12px;border-radius:16px;font-size:13px;margin:6px;white-space:nowrap}
   .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
   .note-pad{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:12px}
-  .note{min-height:64px;font-size:20px;border-radius:14px}
-  .note.locked{opacity:.45;filter:saturate(.6)}
+  .note{min-height:64px;font-size:18px;border-radius:14px}
   .wide{grid-column:1 / -1}
   #barStatus{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:8px}
   #barControls{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
@@ -43,7 +45,7 @@
   #btnDismissSuggest{background:var(--muted)}
 
   /* Modals */
-  #strictModal,#welcomeModal{position:fixed;inset:0;display:none;align-items:center;justify-content:center;z-index:1000;background:rgba(0,0,0,.55)}
+  #strictModal,#welcomeModal{position:fixed;inset:0;display:none;align-items:center;justify-content:center;z-index:1000;background:rgba(0,0,0,.55);pointer-events:auto}
   #strictBox,#welcomeBox{width:min(760px,92vw);background:#0b1325;border:1px solid #22304d;border-radius:16px;padding:18px 20px;box-shadow:0 20px 60px rgba(0,0,0,.5)}
   #strictBox h3,#welcomeBox h2{margin:0 0 8px}
   #strictBtns,#welcomeBtns{display:flex;gap:10px;justify-content:flex-end;margin-top:12px}
@@ -63,6 +65,9 @@
   .tPage.active{display:block}
   #tutorialNav{display:flex;gap:8px;justify-content:space-between;margin-top:10px}
   #tBack{visibility:hidden}
+
+  /* Special exercise strip */
+  #specialBar{display:none;align-items:center;justify-content:space-between;background:#22304d;border:1px solid #2f4166;color:#e8efff;padding:8px 12px;border-radius:10px;margin-bottom:10px}
 </style>
 </head>
 <body>
@@ -74,56 +79,52 @@
     <button id="startBtn">Start ▶</button>
   </div>
 
-  <!-- Welcome Info + Tutorial Modal (multi-page) -->
+  <!-- Welcome / Tutorial -->
   <div id="welcomeModal" aria-modal="true" role="dialog">
     <div id="welcomeBox" class="card">
-      <h2>📘 Program Overview</h2>
-      <p><strong>Daily:</strong> exactly <strong>20 minutes</strong> of focused training. Your timer only runs while actively training. Pauses, menus, Flappy, and the 20-s Shepard tone <em>don’t</em> count.</p>
+      <h2>📘 How this program works</h2>
       <div id="tutorialWrap">
         <div class="tPage active" id="tPage1">
-          <h3>🧭 How it works</h3>
+          <h3>🎯 Goal</h3>
+          <p>Learn to recognize the <strong>12 pitches</strong> by ear (C, C#/Db, D, D#/Eb, E, F, F#/Gb, G, G#/Ab, A, A#/Bb, B). You start with a single pitch and add more.</p>
           <ul>
-            <li>Train a growing set of pitches (1 → 12). Each set has <strong>24 blocks</strong>.</li>
-            <li><strong>RT</strong> = <em>reaction time</em> limit per trial. It starts near <strong>1183 ms</strong> and increases gradually toward <strong>~2028 ms</strong> as more pitches unlock.</li>
-            <li>Blocks <strong>1–20</strong>: feedback shown. Blocks <strong>21–24</strong>: <em>no feedback</em>, preceded by a 20-s Shepard tone.</li>
+            <li><strong>Unlock order (study):</strong> alternate semitones around F: <strong>F, E, F#/Gb, Eb, G, D, Ab, Db, A, C, Bb, B</strong>.</li>
+            <li>Training uses <strong>sets</strong> (how many pitches you’re learning) and <strong>blocks</strong> (24 per set).</li>
+            <li><strong>RT (reaction time)</strong> = max time to answer; it increases slightly with set size.</li>
           </ul>
         </div>
         <div class="tPage" id="tPage2">
-          <h3>🧷 Trainer top bar</h3>
+          <h3>⏱ Daily session</h3>
           <ul>
-            <li><strong>Set / Block</strong> — where you are.</li>
-            <li><strong>% (req %)</strong> — accuracy vs required to pass.</li>
-            <li><strong>RT limit</strong> — max time to answer.</li>
-            <li><strong>Time left</strong> — strict 20-minute training time only.</li>
+            <li>Train for <strong>20 minutes</strong> (timer runs only while actively training).</li>
+            <li>Menus, Flappy, and the 20-s <strong>Shepard tone</strong> don’t count.</li>
+            <li>Blocks <strong>1–20</strong> with feedback; <strong>21–24</strong> are tests (no feedback).</li>
           </ul>
         </div>
         <div class="tPage" id="tPage3">
-          <h3>🎛 Controls</h3>
+          <h3>🎹 Octaves (per study)</h3>
           <ul>
-            <li><strong>Play</strong> — start next trial (first has a brief RT grace).</li>
-            <li><strong>Repeat</strong> — replay current tone (within RT).</li>
-            <li><strong>Pause / Resume</strong> — pauses session time.</li>
-            <li><strong>Auto-next</strong> — auto-advance; <strong>Delay</strong> sets the gap.</li>
-            <li><strong>Out of Bounds</strong> — if tone is just outside your set.</li>
+            <li>Training tones span <strong>three octaves (C4–B6)</strong> and are <strong>randomized</strong> within blocks.</li>
+            <li>This encourages learning the <em>chroma</em> (pitch class), not just pitch height.</li>
+            <li>Tone length: <strong>800 ms</strong>. Pre/post tests also used octaves 4–6, with successive tones &gt;1 octave apart.</li>
           </ul>
         </div>
         <div class="tPage" id="tPage4">
-          <h3>🧪 Blocks 21–24 & Shepard tone</h3>
+          <h3>🧪 Special exercises (Block 15)</h3>
           <ul>
-            <li>20-second Shepard tone wipes short-term pitch memory.</li>
-            <li>Timer pauses during the tone and resumes after.</li>
-            <li>No feedback during tests.</li>
+            <li>When you’re learning <strong>≥ 5 pitches</strong>, normal <strong>Block 15</strong> is replaced with specials:</li>
+            <li><strong>Exercise A</strong>: 12 trials with feedback — choose <em>Target (pitch)</em> vs <em>Other (OOB)</em>.</li>
+            <li><strong>Exercise B</strong>: 22 trials without feedback — same task.</li>
           </ul>
         </div>
         <div class="tPage" id="tPage5">
           <h3>🐤 Flappy breaks</h3>
           <ul>
-            <li>Quick reward during lockout.</li>
-            <li>Timer stays paused after Flappy until you press <strong>Play</strong>.</li>
+            <li>Reward mini-game; every flap plays a random pitch.</li>
+            <li>Timer stays paused until you press <strong>Play</strong> again.</li>
           </ul>
         </div>
       </div>
-
       <div id="welcomeBtns">
         <div id="tutorialNav" style="width:100%">
           <button id="tBack">◀ Back</button>
@@ -149,27 +150,27 @@
       <button id="menuReset">⟲ Reset (factory)</button>
     </div>
     <div class="row" style="margin-top:8px;gap:12px">
-      <div class="pill">Set size (1–12):
-        <select id="setSizeSelect" style="margin-left:6px;background:var(--muted);color:var(--text);border:none;border-radius:8px;padding:4px 8px"></select>
-        <button id="applySetBtn">Go to start of this set</button>
+      <div class="pill">Current scope:
+        <select id="setSizeSelect" style="margin-left:6px;background:var(--muted);color:var(--text);border:none;border-radius:8px;padding:6px 28px 6px 8px"></select>
+        <button id="applySetBtn">Go to start</button>
       </div>
     </div>
 
-    <!-- Progress / Tracker -->
+    <!-- Progress -->
     <div class="card" id="progressCard">
       <h3>📈 Progress</h3>
       <div id="progressControls">
         <label for="pitchSelect">Pitch:</label>
-        <select id="pitchSelect"></select>
+        <select id="pitchSelect" style="padding-right:28px"></select>
         <label for="granularitySelect">View:</label>
-        <select id="granularitySelect">
+        <select id="granularitySelect" style="padding-right:28px">
           <option value="WEEKLY" selected>Weekly (Day 1 → 7)</option>
           <option value="OVERALL">Overall (Week 1 → 8)</option>
         </select>
         <div id="progressLegend">
           <span class="legendDot" style="background:var(--good)"></span> <span id="legGood">Correct %</span>
           <span class="legendDot" style="background:var(--bad);margin-left:12px)"></span> <span id="legBad">Incorrect %</span>
-          <span class="legendDot" style="background:var(--neutral);margin-left:12px"></span> <span id="legTrend">No-trial day</span>
+          <span class="legendDot" style="background:var(--neutral);margin-left:12px)"></span> <span id="legTrend">No-trial day</span>
         </div>
       </div>
       <canvas id="progressCanvas" width="1000" height="300" style="width:100%;height:auto;border-radius:12px;background:#0b1224;border:1px solid #26324a"></canvas>
@@ -178,6 +179,11 @@
 
   <!-- Trainer -->
   <div class="card screen" id="trainerScreen">
+    <div id="specialBar" class="row">
+      <span id="specialText">Special Exercise</span>
+      <span class="pill" id="specialCount">0 / 0</span>
+    </div>
+
     <div id="suggestBanner" class="row">
       <span>Struggling in the test phase. Restart this pitch set?</span>
       <div style="margin-left:auto"></div>
@@ -196,17 +202,25 @@
     </div>
     <div id="barControls">
       <button id="btnPlay">▶ Play</button>
-      <button id="btnRepeat" disabled>↻ Repeat</button>
       <button id="btnPause">⏸ Pause</button>
       <button id="btnToggleAuto">⏯ Toggle Auto-next</button>
       <input id="delaySlider" type="range" min="0" max="2000" step="50" value="1000" style="width:220px">
       <button id="btnBackMenu">↩ Menu</button>
     </div>
+
+    <!-- Note pad -->
     <div class="note-pad" id="notePad"></div>
     <div class="note-pad" style="margin-top:6px">
       <button class="note wide" id="btnOOB" type="button">Out of Bounds</button>
     </div>
-    <p style="opacity:.75;margin-top:8px">800 ms tone • RT limit adapts with set size • 24 blocks per set</p>
+
+    <!-- Binary pad for specials -->
+    <div class="note-pad" id="binaryPad" style="display:none">
+      <button class="note" id="btnTarget" type="button">Target</button>
+      <button class="note" id="btnOther" type="button">Other (OOB)</button>
+    </div>
+
+    <p style="opacity:.75;margin-top:8px">800 ms tone • RT limit adapts with set size • 24 blocks per set • Octaves randomized (C4–B6)</p>
   </div>
 
   <!-- Feedback -->
@@ -221,16 +235,16 @@
     </div>
   </div>
 
-  <!-- Flappy Modal -->
+  <!-- Flappy -->
   <div id="flappyModal">
     <div class="card" style="text-align:center">
       <h3>🐤 Flappy Break</h3>
-      <canvas id="flappyCanvas" width="320" height="480" title="Tap/click anywhere to start, then tap to flap."></canvas>
+      <canvas id="flappyCanvas" width="320" height="480"></canvas>
       <div style="margin-top:8px">
         <button id="flappyClose">Close</button>
       </div>
       <p id="flappyScore">Score: 0 • Best: 0</p>
-      <p style="opacity:.8;font-size:12px">Tap/click (or Space) to flap. First tap starts the game.</p>
+      <p style="opacity:.8;font-size:12px">Tap/click (or Space) to flap. First tap starts — each flap plays a random pitch.</p>
     </div>
   </div>
 
@@ -238,7 +252,7 @@
   <div id="strictModal" aria-modal="true" role="dialog">
     <div id="strictBox" class="card">
       <h3>⚠️ Don’t break your session</h3>
-      <p>⚠️ Training is meant to be one strict 20-minute session without interruption. Please try to complete the session, then wait until tomorrow for the next one.</p>
+      <p>Training is meant to be one strict 20-minute session without interruption. Please finish, then wait until tomorrow.</p>
       <div id="strictBtns">
         <button id="btnStrictResume">Resume Training</button>
         <button id="btnStrictMenu">Go to Menu</button>
@@ -253,6 +267,7 @@
 function byId(id){ return document.getElementById(id); }
 function safe(id, fn){ const el=byId(id); if(el) try{ fn(el); }catch(e){report(e);} }
 function showFlex(id){ safe(id, el=> el.style.display='flex'); }
+function showBlock(id){ safe(id, el=> el.style.display='block'); }
 function hide(id){ safe(id, el=> el.style.display='none'); }
 function text(id, v){ safe(id, el=> el.textContent=v); }
 function report(err){ const el=byId('bootError'); if(!el) return; el.style.display='block'; el.textContent = '⚠️ Script error: ' + (err && err.message ? err.message : String(err)); if(err && err.stack){ el.textContent += '\n' + err.stack; } }
@@ -264,20 +279,16 @@ try{
     levelIndex:1,
     levelTrials:0, levelCorrect:0,
     shepardDoneFor:-1,
-    sessions:[], // {start,end,pauses:[],completed:false}
-    trials:[],
-    startDate:null,
-    lockoutUntil:null,
-    capResetAt:null,
-    testFailStreak:0,
-    suggestShownSet:null,
-    lastSeen:null,
-    flappyHighScore:0,
-    thisWeekIdx:0,
-    thisWeekMs:0
+    sessions:[], trials:[],
+    startDate:null, lockoutUntil:null, capResetAt:null,
+    testFailStreak:0, suggestShownSet:null,
+    lastSeen:null, flappyHighScore:0,
+    thisWeekIdx:0, thisWeekMs:0,
+    levelFailCounts:{},
+    specialRanForLevel:null
   };
 } catch(e){
-  state = { userName:null, levelIndex:1, levelTrials:0, levelCorrect:0, shepardDoneFor:-1, sessions:[], trials:[], startDate:null, lockoutUntil:null, capResetAt:null, testFailStreak:0, suggestShownSet:null, lastSeen:null, flappyHighScore:0, thisWeekIdx:0, thisWeekMs:0 };
+  state = { userName:null, levelIndex:1, levelTrials:0, levelCorrect:0, shepardDoneFor:-1, sessions:[], trials:[], startDate:null, lockoutUntil:null, capResetAt:null, testFailStreak:0, suggestShownSet:null, lastSeen:null, flappyHighScore:0, thisWeekIdx:0, thisWeekMs:0, levelFailCounts:{}, specialRanForLevel:null };
 }
 function save(){ try{ localStorage.setItem('apTrainer', JSON.stringify(state)); }catch(e){ report(e); } }
 window.state = state;
@@ -285,11 +296,13 @@ window.state = state;
 /* ------------------ CONSTANTS ------------------ */
 const AUDIO_PIANO='./audio';
 const PC=["C","Db","D","Eb","E","F","Gb","G","Ab","A","Bb","B"];
-const UNLOCK_ORDER=["F","E","Gb","Eb","G","D","Ab","Db","A","C","Bb","B"];
+const PC_LABEL={ C:"C", Db:"C#/Db", D:"D", Eb:"D#/Eb", E:"E", F:"F", Gb:"F#/Gb", G:"G", Ab:"G#/Ab", A:"A", Bb:"A#/Bb", B:"B" };
+const UNLOCK_ORDER = ["F","E","Gb","Eb","G","D","Ab","Db","A","C","Bb","B"];
+
 const LEVELS_PER_SET=24, SETS=12, LEVELS_TOTAL=SETS*LEVELS_PER_SET;
 const TONE_MS=800;
 const THRESH_24=[0.20,0.25,0.30,0.35,0.40,0.45,0.50,0.55,0.60,0.60,0.65,0.70,0.75,0.78,0.80,0.83,0.85,0.88,0.90,0.90,0.90,0.90,0.90,0.90];
-function blockHasFeedback(block){ return block<=20; } // 21–24 hidden
+function blockHasFeedback(block){ return block<=20; }
 function rtWindowForSet(n){const a=1183,b=2028;return Math.round(a+(n-1)*(b-a)/11);}
 const OOB_RATE=0.25;
 const SESS_DAILY_MS=20*60*1000;
@@ -301,11 +314,13 @@ const LATENCY_CUSHION_MS = 120;
 function fmtMMSS(ms){ const s=Math.max(0,Math.floor(ms/1000)); const m=Math.floor(s/60); const ss=String(s%60).padStart(2,'0'); return `${m}:${ss}`; }
 function fmtHMM(ms){ const s=Math.max(0,Math.floor(ms/1000)); const h=Math.floor(s/3600); const m=Math.floor((s%3600)/60); return `${h}h ${String(m).padStart(2,'0')}m`; }
 function fmtHrsMins(ms){ let s=Math.max(0, Math.floor(ms/1000)); const h=Math.floor(s/3600); const m=Math.floor((s%3600)/60); return `${h} hr${h===1?'':'s'} ${m} min${m===1?'':'s'}`; }
-function todayKey(ts){ const d=new Date(ts||Date.now()); d.setHours(0,0,0,0); return d.getTime(); }
 function dateAtMidnight(ts){ const d=new Date(ts); d.setHours(0,0,0,0); return d.getTime(); }
+function todayKey(ts){ return dateAtMidnight(ts||Date.now()); }
 function weekIndex(ts){ const base=ts||Date.now(); if(!state.startDate) return 0; return Math.floor((base-state.startDate)/(7*24*60*60*1000)); }
+function currentWeekIdx(){ return weekIndex(Date.now()); }
+function weekStartTs(){ if(!state.startDate) return todayKey(Date.now()); const idx=currentWeekIdx(); const base=dateAtMidnight(state.startDate); return base + idx*7*86400000; }
 
-/* ------------------ DURATION MATH ------------------ */
+/* ------------------ DURATION ------------------ */
 function activeDuration(session){
   const endAt = session.end ?? Date.now();
   let total = Math.max(0, endAt - session.start);
@@ -318,105 +333,69 @@ function activeDuration(session){
   }
   return Math.max(0, total);
 }
-function totalActiveForDay(tsDay){
-  const start = dateAtMidnight(tsDay), end = start + 86400000;
-  const sessions = (state.sessions||[]).filter(s => s.start < end && (s.end ?? Date.now()) > start);
-  return sessions.reduce((a,s)=> a + activeDuration(s), 0);
-}
 
-/* ------------------ TIMER/INTERVAL CONTROL ------------------ */
+/* ------------------ FLAGS/TIMERS ------------------ */
 let sessionActive=false, paused=false;
 let rtTimer=null, autoTimer=null, tickId=null;
-function stopAllTimers(){
-  if(tickId){ clearInterval(tickId); tickId=null; }
-  if(rtTimer){ clearTimeout(rtTimer); rtTimer=null; }
-  if(autoTimer){ clearTimeout(autoTimer); autoTimer=null; }
-}
+function stopAllTimers(){ if(tickId){ clearInterval(tickId); tickId=null; } if(rtTimer){ clearTimeout(rtTimer); rtTimer=null; } if(autoTimer){ clearTimeout(autoTimer); autoTimer=null; } }
 
-/* ------------------ SESSION SANITY (fixes your bugs) ------------------ */
-/* Seal any dangling session so menu/refresh never drains time */
-function sealDanglingSession(reason){
+/* ------------------ SANITY ------------------ */
+function sealDanglingSession(){
   try{
     const rec = (state.sessions||[])[(state.sessions||[]).length - 1];
     if(!rec) return;
     if(rec.end == null){
       const now = Date.now();
-      // close any open pause first
       if(rec.pauses && rec.pauses.length){
         const last = rec.pauses[rec.pauses.length-1];
         if(last && !last.end) last.end = now;
       }
-      rec.end = now; // seal the session
-      rec.completed = !!rec.completed;
-      save();
+      rec.end = now; save();
     }
   }catch(e){ report(e); }
 }
 
 /* ------------------ UI ------------------ */
 function showScreen(id){
-  try{
-    document.querySelectorAll('.screen').forEach(el=> el.style.display='none');
-    const el = byId(id);
-    if(el) el.style.display='block';
-
-    if(id === 'menuScreen'){
-      // Ensure any previous session is sealed (prevents countdown drift).
-      sessionActive=false; paused=false;
-      stopAllTimers();
-      sealDanglingSession('menu');
-      updateCapsUI();
-      try{ populatePitchSelect(); drawChart(); }catch(_){}
-    } else if(id !== 'trainerScreen'){
-      // Leaving trainer → pause current if any
-      if(sessionActive && !paused){ pauseStart('nav-away'); }
-    }
-  }catch(e){ report(e); }
-}
-
-function currentWeekIdx(){ return weekIndex(Date.now()); }
-function ensureWeekRoll(){
-  const wi = currentWeekIdx();
-  if(state.thisWeekIdx !== wi){
-    state.thisWeekIdx = wi;
-    state.thisWeekMs = 0;
-    save();
+  document.querySelectorAll('.screen').forEach(el=> el.style.display='none');
+  if(id === 'menuScreen'){
+    sessionActive=false; paused=false;
+    stopAllTimers(); sealDanglingSession(); updateCapsUI();
+    try{ populatePitchSelect(); drawChart(); }catch(_){}
+  } else if(id !== 'trainerScreen'){
+    if(sessionActive && !paused){ pauseStart('nav-away'); }
   }
+  const el = byId(id); if(el) el.style.display='block';
 }
+function ensureWeekRoll(){ const wi=currentWeekIdx(); if(state.thisWeekIdx!==wi){ state.thisWeekIdx=wi; state.thisWeekMs=0; save(); } }
+function isLocked(){ return state.lockoutUntil && Date.now() < state.lockoutUntil; }
 function updateCapsUI(){
-  try{
-    ensureWeekRoll();
-    const left = Math.max(0, SESS_DAILY_MS - msUsedQuota());
-    text('capInfo', `Left: ${fmtMMSS(left)}`);
-
-    const usedW = state.thisWeekMs || 0;
-    const wp = byId('weekPill');
-    if(wp){
-      wp.textContent = `This week: ${fmtHrsMins(usedW)}`;
-      let color = '#dc2626';
-      if(usedW >= 1*3600000 && usedW < 2*3600000) color = 'var(--text)';
-      else if(usedW >= 2*3600000 && usedW < 3*3600000) color = '#16a34a';
-      else if(usedW >= 3*3600000) color = '#fbbf24';
-      wp.style.color = color;
-      wp.title = `Target: ${fmtHMM(WEEKLY_TARGET_MS)}`;
-    }
-
-    const locked = isLocked();
-    const lp = byId('lockoutPill');
-    if(lp){
-      if(locked){
-        lp.style.display='inline-flex';
-        lp.textContent = `🔒 Locked (${fmtHMM(state.lockoutUntil - Date.now())} left)`;
-      } else lp.style.display='none';
-    }
-    const pf = byId('playFlappy'); if(pf) pf.disabled = !locked;
-  }catch(e){ report(e); }
+  ensureWeekRoll();
+  const left = Math.max(0, SESS_DAILY_MS - msUsedQuota());
+  text('capInfo', `Left: ${fmtMMSS(left)}`);
+  const usedW = state.thisWeekMs || 0;
+  const wp = byId('weekPill');
+  if(wp){
+    wp.textContent = `This week: ${fmtHrsMins(usedW)}`;
+    let color = '#dc2626';
+    if(usedW >= 1*3600000 && usedW < 2*3600000) color = 'var(--text)';
+    else if(usedW >= 2*3600000 && usedW < 3*3600000) color = '#16a34a';
+    else if(usedW >= 3*3600000) color = '#fbbf24';
+    wp.style.color = color;
+    wp.title = `Target: ${fmtHMM(WEEKLY_TARGET_MS)}`;
+  }
+  const locked = isLocked();
+  const lp = byId('lockoutPill');
+  if(lp){
+    if(locked){ lp.style.display='inline-flex'; lp.textContent = `🔒 Locked (${fmtHMM(state.lockoutUntil - Date.now())} left)`; }
+    else lp.style.display='none';
+  }
+  const pf = byId('playFlappy'); if(pf) pf.disabled = !locked;
 }
 function setFromIndex(i){return Math.floor((i-1)/LEVELS_PER_SET)+1;}
 function blockFromIndex(i){return ((i-1)%LEVELS_PER_SET)+1;}
 function thresholdForIndex(i){return THRESH_24[blockFromIndex(i)-1];}
-function trainedSet(k){return UNLOCK_ORDER.slice(0,k);}
-function isLocked(){ return state.lockoutUntil && Date.now() < state.lockoutUntil; }
+function trainedSet(k){ return UNLOCK_ORDER.slice(0,k); }
 
 /* ------------------ AUDIO ------------------ */
 let ACTX=null; const BUF_CACHE=new Map();
@@ -437,7 +416,7 @@ async function playSample(note){
     src.connect(g).connect(ctx.destination);
     const t = ctx.currentTime;
     src.start(t); src.stop(t + TONE_MS/1000);
-  }catch(err){
+  }catch(_){
     try{
       const idx={C:0,Db:1,D:2,Eb:3,E:4,F:5,Gb:6,G:7,Ab:8,A:9,Bb:10,B:11};
       const m=/^([A-G](?:b)?)(\d)$/.exec(note);
@@ -452,127 +431,224 @@ async function playSample(note){
       g.gain.exponentialRampToValueAtTime(0.0001, t0 + TONE_MS/1000);
       osc.connect(g).connect(ctx.destination);
       osc.start(t0); osc.stop(t0 + TONE_MS/1000);
-    }catch(e2){ report(e2); }
+    }catch(_e){}
   }
 }
 
-/* ------------------ Shepard tone (PAUSES TIMER) ------------------ */
+/* ------------------ Shepard (pauses) ------------------ */
 let shepRunning=false;
 async function playShepard20s(){
-  try{
-    const wasActive = sessionActive && !paused;
-    if(wasActive) pauseStart('shepard'); // pause timer during Shepard
-    await resumeCtx();
-    const overlay=byId('shepardOverlay'), counterEl=byId('shepardCountdown');
-    if(!overlay||!counterEl) return;
-    overlay.style.display='flex'; shepRunning=true;
-    const ctx=getCtx(); const oscillators=[]; const partials=8, base=55, dur=20; const now=ctx.currentTime;
-    for(let i=0;i<partials;i++){
-      const osc=ctx.createOscillator(); const g=ctx.createGain(); const f=base*Math.pow(2,i);
-      osc.type='sine'; osc.frequency.setValueAtTime(f, now); osc.frequency.exponentialRampToValueAtTime(f/2, now+dur);
-      const amp=Math.exp(-Math.pow((i-(partials-1)/2)/2,2)); g.gain.setValueAtTime(0.05*amp, now);
-      osc.connect(g).connect(ctx.destination); oscillators.push(osc);
-    }
-    oscillators.forEach(o=>o.start(now)); oscillators.forEach(o=>o.stop(now+dur));
-    let left=20; counterEl.textContent=left;
-    const id=setInterval(()=>{ left--; counterEl.textContent=left; if(left<=0) clearInterval(id); },1000);
-    await new Promise(r=>setTimeout(r,dur*1000));
-    overlay.style.display='none'; shepRunning=false;
-    if(wasActive){ pauseEnd(); safe('btnPause', el=> el.textContent='⏸ Pause'); }
-  }catch(e){ report(e); }
+  const wasActive = sessionActive && !paused;
+  if(wasActive) pauseStart('shepard');
+  await resumeCtx();
+  const overlay=byId('shepardOverlay'), counterEl=byId('shepardCountdown');
+  if(!overlay||!counterEl) return;
+  overlay.style.display='flex'; shepRunning=true;
+  const ctx=getCtx(); const oscillators=[]; const partials=8, base=55, dur=20; const now=ctx.currentTime;
+  for(let i=0;i<partials;i++){
+    const osc=ctx.createOscillator(); const g=ctx.createGain(); const f=base*Math.pow(2,i);
+    osc.type='sine'; osc.frequency.setValueAtTime(f, now); osc.frequency.exponentialRampToValueAtTime(f/2, now+dur);
+    const amp=Math.exp(-Math.pow((i-(partials-1)/2)/2,2)); g.gain.setValueAtTime(0.05*amp, now);
+    osc.connect(g).connect(ctx.destination); oscillators.push(osc);
+  }
+  oscillators.forEach(o=>o.start(now)); oscillators.forEach(o=>o.stop(now+dur));
+  let left=20; counterEl.textContent=left;
+  const id=setInterval(()=>{ left--; counterEl.textContent=left; if(left<=0) clearInterval(id); },1000);
+  await new Promise(r=>setTimeout(r,dur*1000));
+  overlay.style.display='none'; shepRunning=false;
+  if(wasActive){ pauseEnd(); safe('btnPause', el=> el.textContent='⏸ Pause'); }
 }
 
-/* ------------------ TRAINING ------------------ */
+/* ------------------ TRAINING FLOW ------------------ */
 let autoNext=false, delayMs=1000;
 let currentNote=null, truePc=null, isOOBTrial=false;
 let firstRtBonusMs=0, inFlightTrial=false;
 let suggestedRestartFlag=false;
 
-const PC2I={C:0,Db:1,D:2,Eb:3,E:4,F:5,Gb:6,G:7,Ab:8,A:9,Bb:10,B:11};
+/* Specials runtime */
+let special=null; // {mode:'A'|'B', targetPc:'F', total:12|22, done:0, withFeedback:true, correct:0}
 
+const PC2I={C:0,Db:1,D:2,Eb:3,E:4,F:5,Gb:6,G:7,Ab:8,A:9,Bb:10,B:11};
 function currentOOBs(setSize){
   if(setSize>=12) return [];
-  const names=trainedSet(setSize).map(n=>PC2I[n]).sort((a,b)=>a-b);
-  const low=names[0], high=names[names.length-1];
+  const learned = trainedSet(setSize).map(n=>PC2I[n]).sort((a,b)=>a-b);
+  const low=learned[0], high=learned[learned.length-1];
   const up1=(high+1)%12, up2=(high+2)%12, dn1=(low+11)%12, dn2=(low+10)%12;
-  const out=[]; if(!names.includes(up1)) out.push(PC[up1]); if(!names.includes(up2) && !names.includes(up1)) out.push(PC[up2]);
-  if(!names.includes(dn1)) out.push(PC[dn1]); if(!names.includes(dn2) && !names.includes(dn1)) out.push(PC[dn2]);
+  const out=[];
+  if(!learned.includes(up1)) out.push(PC[up1]);
+  if(!learned.includes(up2) && !learned.includes(up1)) out.push(PC[up2]);
+  if(!learned.includes(dn1)) out.push(PC[dn1]);
+  if(!learned.includes(dn2) && !learned.includes(dn1)) out.push(PC[dn2]);
   return out;
 }
-function currentOctaves(){
-  const S=setFromIndex(state.levelIndex);
-  if(S<=6) return [4];
-  if(S<=12) return [3,4,5];
-  if(S<=18) return [2,3,4,5,6];
-  return [1,2,3,4,5,6,7];
-}
+/* Per study: always randomize across three octaves 4–6 (C4–B6) */
+function currentOctaves(){ return [4,5,6]; }
+
 function rand(a){ return a[Math.floor(Math.random()*a.length)]; }
+function pcLabel(pc){ return PC_LABEL[pc] || pc; }
+
 function updateLevelUI(){
-  try{
-    const set=setFromIndex(state.levelIndex), block=blockFromIndex(state.levelIndex);
-    text('setInfo', `Set ${set} / 12`);
-    text('blockInfo', `Block ${block} / 24`);
-
-    if(block >= 21){
-      text('accInfo', `Testing — No Feedback`);
-    }else{
-      const req=(thresholdForIndex(state.levelIndex)*100).toFixed(0);
-      const acc=((state.levelCorrect/state.levelTrials*100)||0).toFixed(0);
-      text('accInfo', `Acc ${acc}% (req ${req}%)`);
-    }
-    text('delayInfo', `RT limit: ${rtWindowForSet(set)}ms • Delay: ${delayMs}ms`);
-  }catch(e){ report(e); }
+  const set=setFromIndex(state.levelIndex), block=blockFromIndex(state.levelIndex);
+  text('setInfo', `Set ${set} / 12`);
+  text('blockInfo', `Block ${block} / 24`);
+  if(block >= 21){ text('accInfo', `Testing — No Feedback`); }
+  else{
+    const req=(thresholdForIndex(state.levelIndex)*100).toFixed(0);
+    const acc=((state.levelCorrect/state.levelTrials*100)||0).toFixed(0);
+    text('accInfo', `Acc ${acc}% (req ${req}%)`);
+  }
+  text('delayInfo', `RT limit: ${rtWindowForSet(set)}ms • Delay: ${delayMs}ms`);
 }
+
+/* Build note pad and attach handlers */
 function paintNotes(){
-  try{
-    const pad=byId('notePad'); if(!pad) return; pad.innerHTML='';
-    const set=setFromIndex(state.levelIndex); const unlocked=new Set(trainedSet(set));
-    PC.forEach(pc=>{ 
-      const b=document.createElement('button'); 
-      b.textContent=pc; 
-      b.className='note'; 
-      b.type='button';
-      if(!unlocked.has(pc)){ b.classList.add('locked'); b.disabled=true; } 
-      pad.appendChild(b); 
-    });
-    safe('btnOOB', el=> el.style.display = set>=12 ? 'none' : 'block');
-  }catch(e){ report(e); }
+  const pad=byId('notePad'); if(!pad) return; pad.innerHTML='';
+  const set=setFromIndex(state.levelIndex);
+  const learned = new Set(trainedSet(set));
+  const sorted = PC.filter(pc=> learned.has(pc)); // chromatic order for layout
+  for(const pc of sorted){
+    const b=document.createElement('button');
+    b.textContent=pcLabel(pc);
+    b.dataset.pc=pc;
+    b.className='note';
+    b.type='button';
+    b.addEventListener('click', ()=> guess(pc));
+    pad.appendChild(b);
+  }
+  safe('btnOOB', el=> {
+    el.style.display = set>=12 ? 'none' : 'block';
+    el.onclick = ()=> chooseOOB();
+  });
 }
 
-/* Event delegation so note clicks always work */
-document.addEventListener('click', (e)=>{
-  const pad = byId('notePad');
-  if(!pad) return;
-  if(!pad.contains(e.target)) return;
-  const btn = e.target.closest('button.note');
-  if(!btn || btn.disabled) return;
-  const label = btn.textContent && btn.textContent.trim();
-  if(!label || label === 'Out of Bounds') return;
-  guess(label);
-}, true);
-
+/* Shepard gating for tests */
 function maybeRunShepard(){
   const blk=blockFromIndex(state.levelIndex);
   if(!blockHasFeedback(blk) && state.shepardDoneFor!==state.levelIndex){
     state.shepardDoneFor=state.levelIndex; save();
-    return playShepard20s(); // pauses timer automatically
+    return playShepard20s();
   }
   return Promise.resolve();
 }
-function scheduleAuto(){
-  if(autoTimer){ clearTimeout(autoTimer); autoTimer=null; }
-  if(autoNext && sessionActive && !paused && !shepRunning){
-    autoTimer = setTimeout(()=> nextTrial(true), delayMs);
+
+/* ---------- Specials at BLOCK 15 ---------- */
+function chooseWeakestPitchFromRecent(n=15){
+  const set = setFromIndex(state.levelIndex);
+  const trained = new Set(trainedSet(set));
+  const recent = (state.trials||[]).filter(t=> t.block>0 && t.block<=20).slice(-n);
+  const stats = new Map(); trained.forEach(pc=> stats.set(pc, {ok:0,n:0}));
+  for(const t of recent){ if(!trained.has(t.pc)) continue; const s=stats.get(t.pc); s.n++; if(t.correct) s.ok++; }
+  let weakest = Array.from(trained)[Math.max(0, trained.size-1)], worst = Infinity;
+  for(const [pc,s] of stats){ const acc = s.n? s.ok/s.n : 0; if(acc < worst){ worst=acc; weakest=pc; } }
+  return weakest;
+}
+function startSpecialAtBlock15(){
+  const set = setFromIndex(state.levelIndex);
+  if(set < 5) return false;
+  if(blockFromIndex(state.levelIndex) !== 15) return false;
+  if(state.specialRanForLevel === state.levelIndex) return false;
+  state.specialRanForLevel = state.levelIndex; save();
+
+  const targetPc = chooseWeakestPitchFromRecent(15);
+  special = {mode:'A', targetPc, total:12, done:0, withFeedback:true, correct:0};
+  showSpecialUI(true, `Special A — focus: ${pcLabel(targetPc)}`);
+  text('btnTarget', `Target (${pcLabel(targetPc)})`);
+  text('btnOther',  'Other (OOB)');
+  nextSpecialTrial(true);
+  return true;
+}
+function showSpecialUI(show, label){
+  if(show){
+    showFlex('specialBar'); text('specialText', label||'Special Exercise');
+    text('specialCount', '0 / 0');
+    showBlock('binaryPad'); hide('notePad'); hide('btnOOB');
+  }else{
+    hide('specialBar'); hide('binaryPad'); showBlock('notePad');
+    const set=setFromIndex(state.levelIndex);
+    safe('btnOOB', el=> el.style.display = set>=12 ? 'none' : 'block');
   }
 }
+function nextSpecialTrial(){
+  if(!special) return;
+  const set=setFromIndex(state.levelIndex);
+  const oobs = currentOOBs(set);
+  const isTarget = Math.random()<0.5 || oobs.length===0;
+  const pitchPc = isTarget ? special.targetPc : (oobs.length ? rand(oobs) : rand(PC.filter(p=>p!==special.targetPc)));
+  truePc = pitchPc; isOOBTrial = !isTarget;
+  currentNote = `${pitchPc}${rand(currentOctaves())}`;
+  playSample(currentNote);
+  clearTimeout(rtTimer); rtTimer=null; // no RT in specials
+  text('promptPill','Target or Other?');
+  text('specialCount', `${special.done} / ${special.total}`);
+}
+function endSpecialOrAdvance(){
+  if(!special) return;
+  if(special.done >= special.total){
+    if(special.mode==='A'){
+      special = {mode:'B', targetPc: special.targetPc, total:22, done:0, withFeedback:false, correct:0};
+      showSpecialUI(true, `Special B — focus: ${pcLabel(special.targetPc)}`);
+      text('btnTarget', `Target (${pcLabel(special.targetPc)})`);
+      nextSpecialTrial();
+    }else{
+      const trials = (state.trials||[]).filter(t=> (t.special==='A' || t.special==='B') && t.pc===special.targetPc);
+      const ok = trials.filter(t=> t.correct).length;
+      const n  = trials.length;
+      const pct = n ? Math.round((ok/n)*1000)/10 : 0;
+      alert(`🎉 Hooray! You identified ${pcLabel(special.targetPc)} at ${pct}% accuracy.`);
+      special = null; showSpecialUI(false); text('promptPill','Specials done — press Play to continue');
+    }
+  }
+}
+function answerSpecial(userSaysTarget){
+  if(!special) return;
+  const correct = (userSaysTarget && !isOOBTrial) || (!userSaysTarget && isOOBTrial);
+  state.trials.push({note:currentNote, pc:truePc, guess:userSaysTarget?'TARGET':'OTHER', correct, timeout:false, oob:isOOBTrial, set:setFromIndex(state.levelIndex), block:0, time:Date.now(), special:special.mode});
+  save();
+  if(special.withFeedback){
+    feedback(correct, correct ? undefined : (isOOBTrial ? 'Incorrect — Out of Bounds' : `Incorrect — ${pcLabel(truePc)}`));
+  }
+  if(correct) special.correct = (special.correct||0) + 1;
+  special.done++; text('specialCount', `${special.done} / ${special.total}`);
+  if(special.done >= special.total) { endSpecialOrAdvance(); return; }
+  setTimeout(()=> nextSpecialTrial(), Math.max(500, delayMs));
+}
+
+/* -------- Normal trials (guess & OOB) -------- */
+function guess(pc){
+  if(!sessionActive || paused || shepRunning || special) return;
+  if(!currentNote){ return; }
+  if(rtTimer){ clearTimeout(rtTimer); rtTimer=null; }
+  const ok = (!isOOBTrial && pc === truePc);
+  recordTrial(pc, ok, false, false);
+  feedback(ok, ok ? undefined : (isOOBTrial ? 'Incorrect — Out of Bounds' : `Incorrect — ${pcLabel(truePc)}`));
+  advanceCheck();
+  scheduleAuto();
+}
+function chooseOOB(){
+  if(!sessionActive || paused || shepRunning || special) return;
+  if(!currentNote) return;
+  if(rtTimer){ clearTimeout(rtTimer); rtTimer=null; }
+  const ok = isOOBTrial;
+  recordTrial('OOB', ok, false, true);
+  const msg = ok ? undefined : `Incorrect — ${pcLabel(truePc)}`;
+  feedback(ok, msg);
+  advanceCheck();
+  scheduleAuto();
+}
+
+/* Normal flow driving */
+function scheduleAuto(){ if(autoTimer){ clearTimeout(autoTimer); autoTimer=null; } if(autoNext && sessionActive && !paused && !shepRunning && !special){ autoTimer = setTimeout(()=> nextTrial(true), delayMs); } }
 async function nextTrial(forceNew=false){
-  if(!sessionActive || paused || shepRunning) return;
+  if(!sessionActive || paused || shepRunning || special) return;
   if(inFlightTrial) return;
+
+  if(startSpecialAtBlock15()) return;
+
   inFlightTrial=true;
   try{
     await resumeCtx();
     await maybeRunShepard();
-    if(paused || !sessionActive) return;
+    if(paused || !sessionActive || special) return;
     if(!currentNote || forceNew){
       const set = setFromIndex(state.levelIndex);
       const usable = trainedSet(set);
@@ -588,35 +664,27 @@ async function nextTrial(forceNew=false){
     const rtms = baseRt + firstRtBonusMs + LATENCY_CUSHION_MS;
     firstRtBonusMs = 0;
     rtTimer = setTimeout(()=>handleTimeout(), rtms);
-    safe('btnRepeat', el=> el.disabled=false);
     text('promptPill','Listening… choose the pitch');
   }catch(e){ report(e); }
   finally{ inFlightTrial=false; }
 }
 function handleTimeout(){
-  if(!sessionActive || paused) return;
+  if(!sessionActive || paused || special) return;
   if(rtTimer){ clearTimeout(rtTimer); rtTimer=null; }
   recordTrial(null,false,true);
-  feedback(false);
-  advanceCheck();
-  scheduleAuto();
+  feedback(false, isOOBTrial ? 'Incorrect — Out of Bounds' : `Incorrect — ${pcLabel(truePc)}`);
+  advanceCheck(); scheduleAuto();
 }
 
-/* ---------- Suggestion banner helpers ---------- */
+/* Suggestion banner */
 function hideSuggestBanner(){ hide('suggestBanner'); }
-function showSuggestBanner(){
-  const set = setFromIndex(state.levelIndex);
-  if(state.suggestShownSet === set) return;
-  byId('suggestBanner').style.display='flex';
-}
+function showSuggestBanner(){ const set = setFromIndex(state.levelIndex); if(state.suggestShownSet === set) return; byId('suggestBanner').style.display='flex'; }
 function restartCurrentSet(){
   const set = setFromIndex(state.levelIndex);
   state.levelIndex = (set-1)*LEVELS_PER_SET + 1;
   state.levelTrials = 0; state.levelCorrect = 0;
-  state.shepardDoneFor = -1;
-  state.testFailStreak = 0;
-  state.suggestShownSet = null;
-  save();
+  state.shepardDoneFor = -1; state.testFailStreak = 0;
+  state.suggestShownSet = null; save();
   updateLevelUI(); paintNotes();
   text('promptPill', `Restarted Set ${set}. Press Play to begin.`);
   hideSuggestBanner();
@@ -626,112 +694,90 @@ function maybeSuggestRestart(){
   if(block < 21){ state.testFailStreak = 0; hideSuggestBanner(); suggestedRestartFlag=false; save(); return; }
   if(state.testFailStreak >= 4 && !suggestedRestartFlag){ suggestedRestartFlag = true; showSuggestBanner(); }
 }
-function recordTrial(guess, ok, timeout=false, oobChosen=false){
+
+function recordTrial(guessLabel, ok, timeout=false, oobChosen=false){
   state.levelTrials++; if(ok) state.levelCorrect++;
   const block = blockFromIndex(state.levelIndex);
-  if(block >= 21){
-    if(ok){ state.testFailStreak = 0; hideSuggestBanner(); suggestedRestartFlag=false; }
-    else { state.testFailStreak = (state.testFailStreak||0) + 1; }
-  }else{
-    state.testFailStreak = 0; hideSuggestBanner(); suggestedRestartFlag=false;
-  }
-  state.trials.push({note:currentNote, pc:truePc, guess, correct:ok, timeout, oob:oobChosen, set:setFromIndex(state.levelIndex), block:block, time:Date.now()});
+  if(block >= 21){ if(ok){ state.testFailStreak=0; hideSuggestBanner(); suggestedRestartFlag=false; } else { state.testFailStreak=(state.testFailStreak||0)+1; } }
+  else { state.testFailStreak=0; hideSuggestBanner(); suggestedRestartFlag=false; }
+  state.trials.push({note:currentNote, pc:truePc, guess:guessLabel, correct:ok, timeout, oob:oobChosen, set:setFromIndex(state.levelIndex), block:block, time:Date.now()});
   save(); updateLevelUI(); try{ drawChart(); }catch(_){}; 
   if(block >= 21 && !ok) maybeSuggestRestart();
 }
-function feedback(ok){
-  try{
-    const fb=blockHasFeedback(blockFromIndex(state.levelIndex));
-    if(!fb) return;
-    const box=byId('feedbackBox'); const overlay=byId('feedbackOverlay');
-    if(!box||!overlay) return;
-    box.style.background= ok? 'var(--good)':'var(--bad)';
-    box.textContent = ok ? 'Correct!' : `Incorrect (${truePc})`;
-    overlay.style.display='flex'; requestAnimationFrame(()=>overlay.classList.add('show'));
-    setTimeout(()=>{ overlay.classList.remove('show'); overlay.style.display='none'; }, 500);
-  }catch(e){ report(e); }
+
+function feedback(ok, wrongMsgOverride){
+  const fb=blockHasFeedback(blockFromIndex(state.levelIndex));
+  if(!fb && !special?.withFeedback) return;
+  const box=byId('feedbackBox'); const overlay=byId('feedbackOverlay');
+  if(!box||!overlay) return;
+  box.style.background= ok? 'var(--good)':'var(--bad)';
+  if(ok) box.textContent = 'Correct!';
+  else   box.textContent = wrongMsgOverride || 'Incorrect';
+  overlay.style.display='flex'; requestAnimationFrame(()=>overlay.classList.add('show'));
+  setTimeout(()=>{ overlay.classList.remove('show'); overlay.style.display='none'; }, 500);
 }
+
 function advanceCheck(){
   if(state.levelTrials<20) return;
   const acc=state.levelCorrect/state.levelTrials, need=thresholdForIndex(state.levelIndex);
+  const passed = acc>=need;
+  const key = String(state.levelIndex);
+  if(!passed){
+    state.levelFailCounts[key] = (state.levelFailCounts[key]||0) + 1;
+    if(state.levelFailCounts[key] >= 10){
+      if(confirm('You’ve attempted this level 10+ times without passing. Drop to a lower level?')){
+        if(state.levelIndex>1) state.levelIndex--;
+        state.levelTrials=0; state.levelCorrect=0; state.shepardDoneFor=-1;
+        save(); updateLevelUI(); paintNotes();
+        alert('Dropped one level. Keep going!');
+        return;
+      }
+    }
+  }else{
+    state.levelFailCounts[key]=0;
+  }
   state.levelTrials=0; state.levelCorrect=0;
-  if(acc>=need){
-    if(state.levelIndex<LEVELS_TOTAL) state.levelIndex++;
+  if(passed && state.levelIndex<LEVELS_TOTAL){
+    state.levelIndex++;
     save(); updateLevelUI(); paintNotes();
     startFlappyReward();
-  }
+  } else save();
 }
-function guess(pc){
-  if(!sessionActive || paused) return;
-  if(rtTimer){ clearTimeout(rtTimer); rtTimer=null; }
-  const ok = (!isOOBTrial && pc === truePc);
-  recordTrial(pc, ok, false, false);
-  feedback(ok);
-  advanceCheck();
-  scheduleAuto();
-}
-function chooseOOB(){
-  if(!sessionActive || paused) return;
-  if(rtTimer){ clearTimeout(rtTimer); rtTimer=null; }
-  const ok=isOOBTrial;
-  recordTrial('OOB', ok, false, true);
-  feedback(ok);
-  advanceCheck();
-  scheduleAuto();
-}
-
-/* ------------------ STRICT SESSION MODAL ------------------ */
-let strictModalPending=false;
-function openStrictModal(){
-  showFlex('strictModal');
-  setTimeout(()=> byId('btnStrictResume')?.focus(), 0);
-}
-function closeStrictModal(){ hide('strictModal'); strictModalPending=false; }
 
 /* ------------------ SESSION ------------------ */
 function startSession(){
-  // Extra safety: stop any existing timers and seal any old session
   stopAllTimers();
-  sealDanglingSession('start');
+  sealDanglingSession();
   if(isLocked()){
     const left = state.lockoutUntil - Date.now();
     alert(`Training is locked for ${fmtHMM(left)}.\nYou can still play Flappy from the menu, or Reset lockout/timer.`);
-    showScreen('menuScreen');
-    return;
+    showScreen('menuScreen'); return;
   }
   showScreen('trainerScreen');
   if(!state.startDate) state.startDate=Date.now();
   ensureWeekRoll();
   sessionActive=true; paused=false;
   (state.sessions||[]).push({start:Date.now(),end:null,pauses:[],completed:false}); 
-  state.lastSeen = Date.now();
-  save();
+  state.lastSeen = Date.now(); save();
   updateCapsUI(); updateLevelUI(); paintNotes();
   text('promptPill','Press Play to start');
-  // Single-interval guard
   stopAllTimers();
   tickId=setInterval(()=>{
-    try{
-      ensureWeekRoll();
-      if(sessionActive && !paused && !shepRunning){
-        state.thisWeekMs = (state.thisWeekMs||0) + 1000;
-        save();
+    ensureWeekRoll();
+    if(sessionActive && !paused && !shepRunning){ state.thisWeekMs = (state.thisWeekMs||0) + 1000; save(); }
+    if(sessionActive && !paused){
+      const left = Math.max(0, SESS_DAILY_MS - msUsedQuota());
+      text('timerInfo', `Time left: ${fmtMMSS(left)}`);
+      if(left<=0){
+        const now = Date.now();
+        const rec=state.sessions[state.sessions.length-1];
+        if(rec && !rec.completed){ rec.completed=true; rec.end = now; }
+        state.lockoutUntil = now + LOCKOUT_MS;
+        state.capResetAt   = state.lockoutUntil;
+        save(); endSession(true);
       }
-      if(sessionActive && !paused){
-        const left = Math.max(0, SESS_DAILY_MS - msUsedQuota());
-        text('timerInfo', `Time left: ${fmtMMSS(left)}`);
-        if(left<=0){
-          const now = Date.now();
-          const rec=state.sessions[state.sessions.length-1];
-          if(rec && !rec.completed){ rec.completed=true; rec.end = now; }
-          state.lockoutUntil = now + LOCKOUT_MS;
-          state.capResetAt   = state.lockoutUntil;
-          save();
-          endSession(true);
-        }
-      }
-      updateCapsUI(); drawChart();
-    }catch(e){ report(e); }
+    }
+    updateCapsUI(); drawChart();
   },1000);
 }
 function endSession(auto){
@@ -752,9 +798,6 @@ function pauseStart(reason){
   paused=true;
   if(rtTimer){ clearTimeout(rtTimer); rtTimer=null; }
   if(autoTimer){ clearTimeout(autoTimer); autoTimer=null; }
-  if(["blur","hidden","pagehide","user-leave","nav-away"].includes(reason)){
-    strictModalPending = true;
-  }
 }
 function pauseEnd(){
   const rec=state.sessions[state.sessions.length-1]; if(!rec||!rec.pauses||!rec.pauses.length) return;
@@ -763,34 +806,212 @@ function pauseEnd(){
 }
 function pauseResume(){
   if(!sessionActive) return;
-  if(paused){ pauseEnd(); safe('btnPause', el=> el.textContent='⏸ Pause'); if(currentNote){ nextTrial(false); } }
+  if(paused){ pauseEnd(); safe('btnPause', el=> el.textContent='⏸ Pause'); if(special) nextSpecialTrial(); else if(currentNote){ nextTrial(false); } }
   else { safe('btnPause', el=> el.textContent='▶ Resume'); pauseStart('user'); }
 }
 
-/* ------------------ FLAPPY (timer stays paused after close) ------------------ */
+/* ------------------ QUOTA ------------------ */
+function quotaStart(){ if(state.capResetAt && Date.now() >= state.capResetAt) return state.capResetAt; const d = new Date(); d.setHours(0,0,0,0); return d.getTime(); }
+function msUsedQuota(){ const start = quotaStart(); return (state.sessions || []).filter(s => s.start >= start).reduce((a, s) => a + activeDuration(s), 0); }
+
+/* ------------------ PROGRESS / CHARTS ------------------ */
+function eightWeekBins(pitch){
+  const t0=todayKey(Date.now());
+  const bins=[];
+  for(let w=1; w<=8; w++){ const start=t0 - (w-1)*7*86400000; const end=start+7*86400000; bins.push({w,start,end,n:0,ok:0}); }
+  const oldest=bins[7].start;
+  const trials=(state.trials||[]).filter(tr=>{
+    const d=dateAtMidnight(tr.time);
+    return d>=oldest && d<bins[0].end && (pitch==='OVERALL'|| tr.pc===pitch);
+  });
+  for(const tr of trials){
+    const d=dateAtMidnight(tr.time);
+    const daysAgo=Math.floor((t0 - d)/86400000);
+    const w=Math.floor(daysAgo/7)+1;
+    const idx=Math.min(8,Math.max(1,w))-1;
+    const b=bins[idx]; b.n++; if(tr.correct) b.ok++;
+  }
+  return bins;
+}
+function thisWeekBins(pitch){
+  const ws = weekStartTs();
+  const bins=[];
+  for(let i=0;i<7;i++){ bins.push({day:i+1,start:ws+i*86400000,end:ws+(i+1)*86400000,n:0,ok:0}); }
+  const trials=(state.trials||[]).filter(tr=> tr.time>=ws && tr.time<ws+7*86400000 && (pitch==='OVERALL'|| tr.pc===pitch));
+  for(const tr of trials){
+    const day = Math.floor((dateAtMidnight(tr.time) - ws)/86400000);
+    const b = bins[Math.max(0, Math.min(6, day))]; b.n++; if(tr.correct) b.ok++;
+  }
+  return bins;
+}
+function drawLine(ctx, pts, color, xscale, yscale){ ctx.beginPath(); let started=false; for(const p of pts){ if(p.y===null) continue; const x=xscale(p.x), y=yscale(p.y); if(!started){ ctx.moveTo(x,y); started=true; } else ctx.lineTo(x,y); } if(!started) return; ctx.strokeStyle=color; ctx.lineWidth=2.5; ctx.stroke(); }
+function drawDot(ctx, x, y, color, r=6){ ctx.beginPath(); ctx.arc(x,y,r,0,Math.PI*2); ctx.fillStyle=color; ctx.fill(); }
+function drawChart(){
+  const canvas = byId('progressCanvas'); if(!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width, H = canvas.height;
+  ctx.clearRect(0,0,W,H);
+  const P={l:56,r:24,t:16,b:28}; const AX=P.l, AY=P.t, AW=W-P.l-P.r, AH=H-P.t-P.b;
+  ctx.fillStyle='#0b1224'; ctx.fillRect(0,0,W,H);
+  const mode=byId('granularitySelect')?.value||'WEEKLY';
+  const pitch=byId('pitchSelect')?.value||'OVERALL';
+  const colGood=getComputedStyle(document.documentElement).getPropertyValue('--good')||'#16a34a';
+  const colNeutral=getComputedStyle(document.documentElement).getPropertyValue('--neutral')||'#94a3b8';
+  const yscale=(v)=> AY + AH - (v/100)*AH;
+
+  /* Y grid + labels */
+  ctx.strokeStyle='#20314d'; ctx.lineWidth=1; ctx.beginPath();
+  for(let gy=0; gy<=100; gy+=20){ const y=yscale(gy); ctx.moveTo(AX,y); ctx.lineTo(AX+AW,y);} ctx.stroke();
+  ctx.fillStyle='rgba(229,231,235,0.9)'; ctx.font='12px system-ui,sans-serif';
+  for(let gy=0; gy<=100; gy+=20){ const y=yscale(gy)+4; ctx.fillText(String(gy)+'%', 8, y); }
+
+  if(mode==='WEEKLY'){
+    const bins=thisWeekBins(pitch);
+    const xscale=(d)=> AX + ((d - 1)/(7 - 1))*AW;
+    ctx.strokeStyle='#20314d'; ctx.beginPath();
+    for(let d=1; d<=7; d++){ const x=xscale(d); ctx.moveTo(x,AY); ctx.lineTo(x,AY+AH);} ctx.stroke();
+    ctx.fillStyle='rgba(229,231,235,0.9)';
+    for(let d=1; d<=7; d++){ const x=xscale(d); ctx.fillText(`Day ${d}`, x-18, H-6); }
+    const pts=bins.map(b=> b.n===0? {x:b.day,y:null}:{x:b.day,y:Math.round((b.ok/b.n)*1000)/10});
+    const accPts=pts.filter(p=> p.y!==null);
+    drawLine(ctx,accPts,colGood,xscale,yscale);
+    for(const b of bins){
+      if(b.n>0) drawDot(ctx,xscale(b.day), yscale(Math.round((b.ok/b.n)*1000)/10), colGood, 6);
+      else      drawDot(ctx,xscale(b.day), yscale(0), colNeutral, 5);
+    }
+  } else {
+    const weeks=eightWeekBins(pitch);
+    const xscale=(w)=> AX + ((w - 1)/(8 - 1))*AW;
+    ctx.strokeStyle='#20314d'; ctx.beginPath();
+    for(let w=1; w<=8; w++){ const x=xscale(w); ctx.moveTo(x,AY); ctx.lineTo(x,AY+AH);} ctx.stroke();
+    ctx.fillStyle='rgba(229,231,235,0.9)';
+    for(let w=1; w<=8; w++){ const x=xscale(w); ctx.fillText(`Week ${w}`, x-22, H-6); }
+    const pts=weeks.map(b=> b.n===0? {x:b.w,y:null}:{x:b.w,y:Math.round((b.ok/b.n)*1000)/10});
+    const accPts=pts.filter(p=> p.y!==null);
+    drawLine(ctx,accPts,colGood,xscale,yscale);
+    for(const p of weeks){
+      if(p.n>0) drawDot(ctx,xscale(p.w), yscale(Math.round((p.ok/p.n)*1000)/10), colGood, 5);
+      else      drawDot(ctx,xscale(p.w), yscale(0), colNeutral, 4);
+    }
+  }
+  ctx.fillStyle='rgba(229,231,235,0.85)'; ctx.font='13px system-ui,sans-serif';
+  const label=(pitch==='OVERALL')?'Overall':`Pitch: ${pcLabel(pitch)}`;
+  ctx.fillText(label, AX, AY-2);
+}
+
+/* Pitch dropdown + view toggle */
+function populatePitchSelect(){
+  const sel = byId('pitchSelect'); if(!sel) return;
+  sel.innerHTML='';
+  const mk=(v,t)=>{ const o=document.createElement('option'); o.value=v; o.textContent=t; return o; };
+  sel.appendChild(mk('OVERALL','Overall'));
+  PC.forEach(pc=> sel.appendChild(mk(pc, pcLabel(pc))));
+  sel.onchange = ()=> drawChart();
+  const gran = byId('granularitySelect'); if(gran){ gran.onchange = ()=> drawChart(); gran.value='WEEKLY'; }
+}
+
+/* ------------------ TUTORIAL PAGER ------------------ */
+let tIndex = 0;
+function setTutorialPage(i){
+  tIndex = Math.max(0, Math.min(4, i));
+  ['tPage1','tPage2','tPage3','tPage4','tPage5'].forEach((id, idx)=>{
+    const el = byId(id);
+    if(el) el.classList.toggle('active', idx===tIndex);
+  });
+  const back = byId('tBack'); if(back) back.style.visibility = (tIndex===0 ? 'hidden' : 'visible');
+  const next = byId('tNext'); if(next) next.textContent = (tIndex===4 ? 'Got it' : 'Next ▶');
+}
+function nextTutorial(){ if(tIndex<4){ setTutorialPage(tIndex+1); return; } hide('welcomeModal'); showScreen('menuScreen'); updateCapsUI(); populatePitchSelect(); drawChart(); }
+function prevTutorial(){ setTutorialPage(tIndex-1); }
+
+/* ------------------ WIRING ------------------ */
+function wireOnce(){
+  sealDanglingSession();
+  try{ populatePitchSelect(); drawChart(); }catch(_){}
+  // Start
+  safe('startBtn', el=> el.onclick=()=>{
+    const name=(byId('userNameInput')?.value||'').trim()||'Player';
+    state.userName=name; save();
+    safe('greeting', g=> g.textContent=`Hello ${state.userName}!`);
+    showFlex('welcomeModal'); setTutorialPage(0);
+  });
+  safe('tNext', el=> el.onclick=()=> nextTutorial());
+  safe('tBack', el=> el.onclick=()=> prevTutorial());
+
+  // Menu
+  safe('menuStart',   el=> el.onclick=()=> startSession());
+  safe('playFlappy',  el=> el.onclick=()=> openFlappyFromMenu());
+  safe('resetLockout',el=> el.onclick=()=>{
+    if(!confirm('Reset lockout/timer now? This starts a fresh 20-minute window immediately.')) return;
+    state.lockoutUntil = null; state.capResetAt = Date.now(); state.lastSeen = Date.now();
+    save(); updateCapsUI(); alert('Timer reset. You can start training now.');
+  });
+  safe('menuReset',   el=> el.onclick=()=> doFactoryReset());
+
+  // Set selector
+  safe('setSizeSelect', sel=>{
+    if(!sel.options.length){
+      for(let i=1;i<=SETS;i++){
+        const o=document.createElement('option');
+        o.value=i; o.textContent=`${i} ${i===1?'pitch':'pitches'}`;
+        sel.appendChild(o);
+      }
+    }
+    sel.value = String(setFromIndex(state.levelIndex));
+  });
+  safe('applySetBtn', el=> el.onclick=()=>{
+    const v = parseInt(byId('setSizeSelect')?.value||'1',10)||1;
+    state.levelIndex=(v-1)*LEVELS_PER_SET+1; state.levelTrials=0; state.levelCorrect=0; state.shepardDoneFor=-1; state.testFailStreak=0; suggestedRestartFlag=false; state.suggestShownSet=null; save();
+    alert(`Scope set to ${v} ${v===1?'pitch':'pitches'} (Block 1/24)`); paintNotes();
+  });
+
+  // Trainer controls
+  safe('btnPlay',        el=> el.onclick=async()=>{ firstRtBonusMs=2000; await resumeCtx(); if(paused){ pauseEnd(); } safe('btnPause', b=> b.textContent='⏸ Pause'); if(special) nextSpecialTrial(); else nextTrial(true); });
+  safe('btnPause',       el=> el.onclick=()=> pauseResume());
+  safe('btnBackMenu',    el=> el.onclick=()=>{
+    if(sessionActive){ if(!paused) pauseStart('user-leave'); openStrictModal(); }
+    else { showScreen('menuScreen'); populatePitchSelect(); drawChart(); }
+  });
+  safe('btnToggleAuto',  el=> el.onclick=()=>{
+    autoNext=!autoNext; text('autoInfo',`Auto-next: ${autoNext?'On':'Off'}`);
+    const sl=byId('delaySlider'); if(sl){ sl.disabled=!autoNext; sl.classList.toggle('disabled', !autoNext); }
+    if(!autoNext && autoTimer){ clearTimeout(autoTimer); autoTimer=null; }
+  });
+  safe('delaySlider', sl=>{
+    sl.disabled=true; sl.classList.add('disabled');
+    sl.oninput=(e)=>{ delayMs=parseInt(e.target.value,10)||0; updateLevelUI(); };
+  });
+
+  // Specials
+  safe('btnTarget',el=> el.onclick=()=> answerSpecial(true));
+  safe('btnOther', el=> el.onclick=()=> answerSpecial(false));
+
+  // Strict modal buttons
+  safe('btnStrictResume', el=> el.onclick=()=>{ closeStrictModal(); showScreen('trainerScreen'); });
+  safe('btnStrictMenu',   el=> el.onclick=()=>{ closeStrictModal(); showScreen('menuScreen'); });
+
+  // Initial screen
+  if(!state.userName){ showScreen('startScreen'); }
+  else { safe('greeting', g=> g.textContent=`Hello ${state.userName}!`); showScreen('menuScreen'); updateCapsUI(); }
+}
+
+/* ------------------ FLAPPY ------------------ */
 let fCtx, flappyRAF=null, running=false, score=0, pipes=[], bird, pipeTimer=0, lastTs=null;
 const FLAPPY = { gravity:900, flap:-380, baseSpeed:140, maxSpeed:260, speed:140, gap:140, minGap:100, spawnEvery:1.20, width:52 };
+function openFlappyFromMenu(){ if(isLocked()) openFlappyModal(); else alert('Flappy is intended for lockout/rewards.'); }
 function openFlappyModal(){ byId('flappyModal').style.display='flex'; const c=byId('flappyCanvas'); if(!c) return; fCtx=c.getContext('2d'); resetFlappy(); attachFlappyControls(); }
-function startFlappyReward(){
-  if(sessionActive && !paused){ pauseStart('flappy'); } // timer pause during Flappy
-  if(rtTimer){ clearTimeout(rtTimer); rtTimer=null; }
-  if(autoTimer){ clearTimeout(autoTimer); autoTimer=null; }
-  openFlappyModal();
-}
+function startFlappyReward(){ if(sessionActive && !paused){ pauseStart('flappy'); } clearTimeout(rtTimer); rtTimer=null; clearTimeout(autoTimer); autoTimer=null; openFlappyModal(); }
 function closeFlappy(){
   running=false; cancelAnimationFrame(flappyRAF); byId('flappyModal').style.display='none'; detachFlappyControls();
   if(score > (state.flappyHighScore||0)){ state.flappyHighScore = score; save(); }
   if(sessionActive){
     safe('btnPause', el=> el.textContent='▶ Resume');
-    currentNote=null;
-    if(rtTimer){ clearTimeout(rtTimer); rtTimer=null; }
-    if(autoTimer){ clearTimeout(autoTimer); autoTimer=null; }
-    safe('btnRepeat', el=> el.disabled=true);
+    currentNote=null; clearTimeout(rtTimer); rtTimer=null; clearTimeout(autoTimer); autoTimer=null;
     text('promptPill','Flappy over — press Play to continue');
   }
 }
 function resetFlappy(){ const cnv=byId('flappyCanvas'); if(!cnv) return; bird={x:60,y:cnv.height/2,vy:0,wing:0}; pipes=[]; score=0; pipeTimer=0; lastTs=null; FLAPPY.speed=FLAPPY.baseSpeed; text('flappyScore',`Score: 0 • Best: ${state.flappyHighScore||0}`); }
-function flap(){ bird.vy = FLAPPY.flap; }
+function flap(){ bird.vy = FLAPPY.flap; const pc = rand(PC); const note = `${pc}${rand(currentOctaves())}`; playSample(note); }
 function progressiveDifficulty(){ const target = FLAPPY.baseSpeed + Math.min(Math.floor(score/5)*18, FLAPPY.maxSpeed - FLAPPY.baseSpeed); FLAPPY.speed = target; const g0=140, step=6, every=8; FLAPPY.gap = Math.max(FLAPPY.minGap, g0 - Math.min(Math.floor(score/every)*step, 40)); }
 function drawBird(){ const ctx=fCtx; if(!ctx) return; const body=getComputedStyle(document.documentElement).getPropertyValue('--accent')||'#fbbf24'; const wingCol='#ffd166'; const outline='#111';
   ctx.save();
@@ -805,7 +1026,12 @@ function drawBird(){ const ctx=fCtx; if(!ctx) return; const body=getComputedStyl
   ctx.restore();
 }
 function drawPipes(){ const ctx=fCtx; if(!ctx) return; const col=getComputedStyle(document.documentElement).getPropertyValue('--good')||'#16a34a'; ctx.fillStyle=col; const cnv=byId('flappyCanvas'); if(!cnv) return; for(const p of pipes){ const topH=p.gapY-FLAPPY.gap/2, bottomY=p.gapY+FLAPPY.gap/2; ctx.fillRect(p.x,0,FLAPPY.width,topH); ctx.fillRect(p.x,bottomY,FLAPPY.width,cnv.height-bottomY); } }
-function spawnPipe(){ const cnv=byId('flappyCanvas'); if(!cnv) return; const h=cnv.height, m=40; const gapY=Math.max(m,Math.min(h-m-FLAPPY.gap,Math.random()*(h-FLAPPY.gap-2*m)))+FLAPPY.gap/2; pipes.push({x:cnv.width, gapY, passed:false}); }
+function spawnPipe(){
+  const cnv=byId('flappyCanvas'); if(!cnv) return;
+  const h=cnv.height, m=40;
+  const gapY=Math.max(m,Math.min(h-m-FLAPPY.gap,Math.random()*(h-FLAPPY.gap-2*m)))+FLAPPY.gap/2;
+  pipes.push({x: cnv.width, gapY: gapY, passed:false}); /* <-- fixed colon syntax */
+}
 function step(ts){
   if(!running) return;
   const cnv=byId('flappyCanvas'); if(!cnv) return;
@@ -841,61 +1067,40 @@ function detachFlappyControls(){
   cnv.removeEventListener('touchstart', _flHandlers.onTouchStart);
   window.removeEventListener('keydown', _flHandlers.onKey);
   safe('flappyClose', el=> el.onclick=null);
-  _flHandlers=null;
 }
-function openFlappyFromMenu(){ if(isLocked()) openFlappyModal(); else alert('Flappy is intended for lockout/rewards.'); }
 
-/* ------------------ AWAY-TIME & LEAVE HANDLERS ------------------ */
+/* ------------------ STRICT MODAL + NAV GUARDS ------------------ */
+let strictModalPending=false;
+function openStrictModal(){ showFlex('strictModal'); setTimeout(()=> byId('btnStrictResume')?.focus(), 0); }
+function closeStrictModal(){ hide('strictModal'); strictModalPending=false; }
 function reconcileAwayTime(){
   const now = Date.now();
   const rec = (state.sessions||[])[(state.sessions||[]).length - 1];
-  // If there was an open pause, close it so away time never counts
   if(rec && rec.pauses && rec.pauses.length){
     const openPause = rec.pauses[rec.pauses.length-1];
-    if(openPause && !openPause.end){
-      openPause.end = now; save();
-    }
+    if(openPause && !openPause.end){ openPause.end = now; save(); }
   }
   state.lastSeen = now; save();
 }
 document.addEventListener('visibilitychange', ()=>{
-  if(document.hidden && sessionActive && !paused){ pauseStart('hidden'); }
-  if(!document.hidden){
-    reconcileAwayTime();
-    if(strictModalPending) openStrictModal();
-  }
+  if(document.hidden && sessionActive && !paused){ pauseStart('hidden'); strictModalPending = true; }
+  if(!document.hidden){ reconcileAwayTime(); if(strictModalPending) openStrictModal(); }
 });
-window.addEventListener('blur', ()=>{
-  if(sessionActive && !paused){ pauseStart('blur'); strictModalPending = true; }
-});
-window.addEventListener('focus', ()=>{
-  reconcileAwayTime();
-  if(strictModalPending) openStrictModal();
-});
-window.addEventListener('pagehide', ()=>{
-  try{
-    if(sessionActive && !paused){ pauseStart('pagehide'); strictModalPending = true; }
-    state.lastSeen = Date.now(); save();
-  }catch(_){}
-});
+window.addEventListener('blur', ()=>{ if(sessionActive && !paused){ pauseStart('blur'); strictModalPending = true; } });
+window.addEventListener('focus', ()=>{ reconcileAwayTime(); if(strictModalPending) openStrictModal(); });
+window.addEventListener('pagehide', ()=>{ try{ if(sessionActive && !paused){ pauseStart('pagehide'); strictModalPending = true; } state.lastSeen = Date.now(); save(); }catch(_){}});
 
 /* --- beforeunload guard --- */
 let allowUnloadOnce = false;
 window.addEventListener('beforeunload', (e)=>{
   if(allowUnloadOnce) return;
-  if(sessionActive && !paused){
-    e.preventDefault();
-    e.returnValue='';
-  }
+  if(sessionActive && !paused){ e.preventDefault(); e.returnValue=''; }
 });
 
 /* ------------------ FACTORY RESET ------------------ */
-async function wipeAllStorage(){
-  try{ localStorage.clear(); }catch(_){}
+async function wipeAllStorage(){ try{ localStorage.clear(); }catch(_){}
   try{ sessionStorage.clear(); }catch(_){}
-  if('caches' in window){
-    try{ const keys = await caches.keys(); await Promise.all(keys.map(k=>caches.delete(k))); }catch(_){}
-  }
+  if('caches' in window){ try{ const keys = await caches.keys(); await Promise.all(keys.map(k=>caches.delete(k))); }catch(_){ } }
   if('indexedDB' in window){
     try{
       if(indexedDB.databases){
@@ -912,351 +1117,21 @@ function forceStartScreen(){
   if(input){ input.value=''; input.focus(); }
 }
 function resetInMemoryStateToDefaults(){
-  state = { userName:null, levelIndex:1, levelTrials:0, levelCorrect:0, shepardDoneFor:-1, sessions:[], trials:[], startDate:null, lockoutUntil:null, capResetAt:null, testFailStreak:0, suggestShownSet:null, lastSeen:null, flappyHighScore:0, thisWeekIdx:0, thisWeekMs:0 };
+  state = { userName:null, levelIndex:1, levelTrials:0, levelCorrect:0, shepardDoneFor:-1, sessions:[], trials:[], startDate:null, lockoutUntil:null, capResetAt:null, testFailStreak:0, suggestShownSet:null, lastSeen:null, flappyHighScore:0, thisWeekIdx:0, thisWeekMs:0, levelFailCounts:{}, specialRanForLevel:null };
   save();
 }
 function doFactoryReset(){
   (async ()=>{
     try{
       if(!confirm('Reset EVERYTHING to factory settings? This erases your progress, timers, and settings.')) return;
-      stopAllTimers();
-      sessionActive = false; paused = false;
-      await closeAudio();
-      await wipeAllStorage();
-      resetInMemoryStateToDefaults();
-      forceStartScreen();
-      allowUnloadOnce = true;
-      setTimeout(()=>{ try{ location.reload(); }catch(_){ } }, 0);
+      stopAllTimers(); sessionActive=false; paused=false;
+      await closeAudio(); await wipeAllStorage(); resetInMemoryStateToDefaults(); forceStartScreen();
+      allowUnloadOnce = true; setTimeout(()=>{ try{ location.reload(); }catch(_){ } }, 0);
     }catch(e){ report(e); alert('Reset failed: '+e.message); }
   })();
 }
 
-/* ------------------ QUOTA (20-min daily cap) ------------------ */
-function quotaStart(){
-  if(state.capResetAt && Date.now() >= state.capResetAt) return state.capResetAt;
-  const d = new Date(); d.setHours(0,0,0,0);
-  return d.getTime();
-}
-function msUsedQuota(){
-  const start = quotaStart();
-  return (state.sessions || [])
-    .filter(s => s.start >= start)
-    .reduce((a, s) => a + activeDuration(s), 0);
-}
-
-/* ------------------ PROGRESS / CHARTS ------------------ */
-const Y_MAX = 100;
-
-/* Chart helpers (unchanged core) */
-function daySessions(tsDay){
-  const start = dateAtMidnight(tsDay), end = start + 86400000;
-  return (state.sessions||[]).filter(s => s.start < end && (s.end??Date.now()) > start);
-}
-function aggregateTrialsDaily(bins, pitchSelector){
-  const start = bins[0].t, end = bins[bins.length-1].t + 86400000;
-  const trials = (state.trials||[]).filter(tr=>{
-    if(tr.time<start || tr.time>=end) return false;
-    if(pitchSelector==='OVERALL') return true;
-    return tr.pc===pitchSelector;
-  });
-  const map = new Map(bins.map(b=>[b.t,b]));
-  for(const tr of trials){
-    const day = dateAtMidnight(tr.time);
-    const b = map.get(day);
-    if(b){ b.n++; if(tr.correct) b.ok++; }
-  }
-  return bins;
-}
-function buildDailyBinsOverallWindow(){
-  const bins=[]; for(let i=56-1;i>=0;i--){ const t = (d=>{ d.setHours(0,0,0,0); d.setDate(d.getDate()-i); return d.getTime(); })(new Date()); bins.push({t,n:0,ok:0}); }
-  return bins;
-}
-function dailyPoints(bins){
-  return bins.map(b=>{
-    if(b.n===0) return {x:b.t, y:null};
-    const pct = Math.round((b.ok/b.n)*1000)/10;
-    return {x:b.t, y:pct};
-  });
-}
-
-/* Weekly (Day 1..7 left→right; Day 1 = today) */
-function last7DailyBins(pitchSelector){
-  const days=[];
-  for(let i=0;i<7;i++){
-    const dTs = todayKey(Date.now()) + i*86400000;
-    const active = (i===0) ? totalActiveForDay(todayKey(Date.now())) : 0;
-    days.push({t:dTs, n:0, ok:0, active});
-  }
-  const todayStart = todayKey(Date.now());
-  const trials = (state.trials||[]).filter(tr=>{
-    if(dateAtMidnight(tr.time)!==todayStart) return false;
-    if(pitchSelector==='OVERALL') return true;
-    return tr.pc===pitchSelector;
-  });
-  const b = days[0];
-  for(const tr of trials){ b.n++; if(tr.correct) b.ok++; }
-  return days;
-}
-
-/* Overall (Week 1..8; Week 1 = current week on the left) */
-function eightWeekBins(pitchSelector){
-  const t0 = todayKey(Date.now());
-  const bins=[];
-  for(let w=1; w<=8; w++){
-    const start = t0 - (w-1)*7*86400000;
-    const end   = start + 7*86400000;
-    bins.push({w,start,end,n:0,ok:0});
-  }
-  const oldestStart = bins[7].start;
-  const trials = (state.trials||[]).filter(tr=>{
-    const d = dateAtMidnight(tr.time);
-    if(d < oldestStart || d >= bins[0].end) return false;
-    if(pitchSelector==='OVERALL') return true;
-    return tr.pc===pitchSelector;
-  });
-  for(const tr of trials){
-    const d = dateAtMidnight(tr.time);
-    const daysAgo = Math.floor((t0 - d)/86400000); // 0..55
-    const w = Math.floor(daysAgo/7) + 1; // 1..8
-    const idx = Math.min(8, Math.max(1, w)) - 1;
-    const b = bins[idx];
-    b.n++; if(tr.correct) b.ok++;
-  }
-  return bins;
-}
-
-/* Canvas draw helpers */
-function drawLine(ctx, pts, color, xscale, yscale){
-  ctx.beginPath();
-  let started=false;
-  for(const p of pts){
-    if(p.y===null) continue;
-    const x = xscale(p.x), y = yscale(p.y);
-    if(!started){ ctx.moveTo(x,y); started=true; } else { ctx.lineTo(x,y); }
-  }
-  if(!started) return;
-  ctx.strokeStyle = color;
-  ctx.lineWidth = 2.5;
-  ctx.stroke();
-}
-function drawDot(ctx, x, y, color, r=6){
-  ctx.beginPath();
-  ctx.arc(x,y,r,0,Math.PI*2);
-  ctx.fillStyle=color;
-  ctx.fill();
-}
-
-function drawChart(){
-  const canvas = byId('progressCanvas'); if(!canvas) return;
-  const ctx = canvas.getContext('2d');
-  const W = canvas.width, H = canvas.height;
-
-  ctx.clearRect(0,0,W,H);
-
-  const P = {l:56, r:24, t:16, b:28};
-  const AX = P.l, AY = P.t, AW = W-P.l-P.r, AH = H-P.t-P.b;
-
-  ctx.fillStyle = '#0b1224'; ctx.fillRect(0,0,W,H);
-
-  const mode  = byId('granularitySelect')?.value || 'WEEKLY';
-  const pitch = byId('pitchSelect')?.value || 'OVERALL';
-  const colGood   = getComputedStyle(document.documentElement).getPropertyValue('--good')||'#16a34a';
-  const colNeutral= getComputedStyle(document.documentElement).getPropertyValue('--neutral')||'#94a3b8';
-
-  const yscale = (v)=> AY + AH - (v/100)*AH;
-
-  // horizontal grid + labels
-  ctx.strokeStyle = '#20314d'; ctx.lineWidth = 1;
-  ctx.beginPath();
-  for(let gy=0; gy<=100; gy+=20){
-    const y = yscale(gy);
-    ctx.moveTo(AX, y); ctx.lineTo(AX+AW, y);
-  }
-  ctx.stroke();
-
-  ctx.fillStyle = 'rgba(229,231,235,0.9)';
-  ctx.font = '12px system-ui, sans-serif';
-  for(let gy=0; gy<=100; gy+=20){
-    const y = yscale(gy)+4;
-    ctx.fillText(String(gy)+'%', 8, y);
-  }
-
-  if(mode==='WEEKLY'){
-    const days = last7DailyBins(pitch);
-    const xscale = (d)=> AX + ((d - 1)/(7 - 1))*AW;
-
-    ctx.strokeStyle = '#20314d'; ctx.lineWidth = 1;
-    ctx.beginPath();
-    for(let d=1; d<=7; d++){
-      const x = xscale(d);
-      ctx.moveTo(x, AY); ctx.lineTo(x, AY+AH);
-    }
-    ctx.stroke();
-    ctx.fillStyle='rgba(229,231,235,0.9)';
-    for(let d=1; d<=7; d++){
-      const x = xscale(d);
-      ctx.fillText(`Day ${d}`, x-18, H-6);
-    }
-
-    const pts = days.map((d, idx)=>{
-      if(idx===0 && d.n>0){
-        const y = Math.round((d.ok/d.n)*1000)/10;
-        return {x:1, y};
-      }
-      return {x:idx+1, y:null, active:d.active};
-    });
-
-    const accPts = pts.filter(p=> p.y!==null);
-    drawLine(ctx, accPts, colGood, (x)=>xscale(x), yscale);
-
-    if(pts[0].y!==null){
-      drawDot(ctx, xscale(1), yscale(pts[0].y), colGood, 6);
-    } else if(days[0].active>0){
-      drawDot(ctx, xscale(1), yscale(0), colNeutral, 6);
-    }
-  }
-  else {
-    const weeks = eightWeekBins(pitch);
-    const xscale = (w)=> AX + ((w - 1)/(8 - 1))*AW;
-
-    ctx.strokeStyle = '#20314d'; ctx.lineWidth = 1;
-    ctx.beginPath();
-    for(let w=1; w<=8; w++){
-      const x = xscale(w);
-      ctx.moveTo(x, AY); ctx.lineTo(x, AY+AH);
-    }
-    ctx.stroke();
-    ctx.fillStyle='rgba(229,231,235,0.9)';
-    for(let w=1; w<=8; w++){
-      const x = xscale(w);
-      ctx.fillText(`Week ${w}`, x-22, H-6);
-    }
-
-    const pts = weeks.map(b=>{
-      if(b.n===0) return {x:b.w, y:null};
-      const y = Math.round((b.ok/b.n)*1000)/10;
-      return {x:b.w, y};
-    });
-
-    const accPts = pts.filter(p=> p.y!==null);
-    drawLine(ctx, accPts, colGood, xscale, yscale);
-    for(const p of accPts){
-      drawDot(ctx, xscale(p.x), yscale(p.y), colGood, 5);
-    }
-  }
-
-  ctx.fillStyle = 'rgba(229,231,235,0.85)';
-  ctx.font = '13px system-ui, sans-serif';
-  const label = (pitch==='OVERALL') ? 'Overall' : `Pitch: ${pitch}`;
-  ctx.fillText(label, AX, AY-2);
-}
-
-function populatePitchSelect(){
-  const sel = byId('pitchSelect'); if(!sel) return;
-  sel.innerHTML='';
-  const mk = (v, t)=>{ const o=document.createElement('option'); o.value=v; o.textContent=t; return o; };
-  sel.appendChild(mk('OVERALL','Overall'));
-  PC.forEach(pc=> sel.appendChild(mk(pc, pc)));
-  sel.onchange = ()=> drawChart();
-
-  const gran = byId('granularitySelect');
-  if(gran){ gran.onchange = ()=> drawChart(); gran.value='WEEKLY'; }
-}
-
-/* ------------------ TUTORIAL PAGER ------------------ */
-let tIndex = 0;
-function setTutorialPage(i){
-  tIndex = Math.max(0, Math.min(4, i));
-  ['tPage1','tPage2','tPage3','tPage4','tPage5'].forEach((id, idx)=>{
-    const el = byId(id);
-    if(el) el.classList.toggle('active', idx===tIndex);
-  });
-  const back = byId('tBack'); if(back) back.style.visibility = (tIndex===0 ? 'hidden' : 'visible');
-  const next = byId('tNext'); if(next) next.textContent = (tIndex===4 ? 'Got it' : 'Next ▶');
-}
-function nextTutorial(){
-  if(tIndex<4){ setTutorialPage(tIndex+1); return; }
-  hide('welcomeModal');
-  showScreen('menuScreen'); updateCapsUI(); populatePitchSelect(); drawChart();
-}
-function prevTutorial(){ setTutorialPage(tIndex-1); }
-
-/* ------------------ WIRING ------------------ */
-function wireOnce(){
-  // On boot, ensure no dangling session inflates time while on menu.
-  sealDanglingSession('boot');
-
-  try{ populatePitchSelect(); drawChart(); }catch(_){}
-  // Start
-  safe('startBtn', el=> el.onclick=()=>{
-    const name=(byId('userNameInput')?.value||'').trim()||'Player';
-    state.userName=name; save();
-    safe('greeting', g=> g.textContent=`Hello ${state.userName}!`);
-    showFlex('welcomeModal'); setTutorialPage(0);
-  });
-  safe('tNext', el=> el.onclick=()=> nextTutorial());
-  safe('tBack', el=> el.onclick=()=> prevTutorial());
-
-  // Menu
-  safe('menuStart',   el=> el.onclick=()=> startSession());
-  safe('playFlappy',  el=> el.onclick=()=> openFlappyFromMenu());
-  safe('resetLockout',el=> el.onclick=()=>{
-    if(!confirm('Reset lockout/timer now? This starts a fresh 20-minute window immediately.')) return;
-    state.lockoutUntil = null;
-    state.capResetAt   = Date.now();
-    state.lastSeen     = Date.now();
-    save(); updateCapsUI();
-    alert('Timer reset. You can start training now.');
-  });
-  safe('menuReset',   el=> el.onclick=()=> doFactoryReset());
-
-  // Set selector
-  safe('setSizeSelect', sel=>{
-    if(!sel.options.length){ for(let i=1;i<=SETS;i++){ const o=document.createElement('option'); o.value=i; o.textContent='Set '+i; sel.appendChild(o); } }
-    sel.value = String(setFromIndex(state.levelIndex));
-  });
-  safe('applySetBtn', el=> el.onclick=()=>{
-    const v = parseInt(byId('setSizeSelect')?.value||'1',10)||1;
-    state.levelIndex=(v-1)*LEVELS_PER_SET+1; state.levelTrials=0; state.levelCorrect=0; state.shepardDoneFor=-1; state.testFailStreak=0; suggestedRestartFlag=false; state.suggestShownSet=null; save();
-    alert('Jumped to Set '+v+' (Block 1/24)');
-    paintNotes();
-  });
-
-  // Trainer controls
-  safe('btnPlay',        el=> el.onclick=async()=>{ firstRtBonusMs=2000; await resumeCtx(); if(paused){ pauseEnd(); } safe('btnPause', b=> b.textContent='⏸ Pause'); nextTrial(true); });
-  safe('btnRepeat',      el=> el.onclick=()=> nextTrial(false));
-  safe('btnPause',       el=> el.onclick=()=> pauseResume());
-  safe('btnBackMenu',    el=> el.onclick=()=>{
-    if(sessionActive){
-      if(!paused) pauseStart('user-leave');
-      openStrictModal();
-    } else {
-      showScreen('menuScreen'); populatePitchSelect(); drawChart();
-    }
-  });
-  safe('btnToggleAuto',  el=> el.onclick=()=>{
-    autoNext=!autoNext; text('autoInfo',`Auto-next: ${autoNext?'On':'Off'}`);
-    const sl=byId('delaySlider'); if(sl){ sl.disabled=!autoNext; sl.classList.toggle('disabled', !autoNext); }
-    if(!autoNext && autoTimer){ clearTimeout(autoTimer); autoTimer=null; }
-  });
-  safe('delaySlider', sl=>{
-    sl.disabled=true; sl.classList.add('disabled');
-    sl.oninput=(e)=>{ delayMs=parseInt(e.target.value,10)||0; updateLevelUI(); };
-  });
-
-  // OOB
-  safe('btnOOB', el=> el.onclick=()=> chooseOOB());
-
-  // Strict modal buttons
-  safe('btnStrictResume', el=> el.onclick=()=>{ closeStrictModal(); showScreen('trainerScreen'); });
-  safe('btnStrictMenu',   el=> el.onclick=()=>{ closeStrictModal(); showScreen('menuScreen'); });
-
-  // Initial screen
-  if(!state.userName){ showScreen('startScreen'); }
-  else { safe('greeting', g=> g.textContent=`Hello ${state.userName}!`); showScreen('menuScreen'); updateCapsUI(); }
-}
-
-// Global listeners
+/* ------------------ INIT ------------------ */
 window.addEventListener('load', wireOnce);
 window.addEventListener('resize', ()=>{ try{ drawChart(); }catch(_){ }});
 </script>
