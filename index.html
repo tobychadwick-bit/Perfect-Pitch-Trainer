@@ -6,13 +6,15 @@
 <title>🎵 Absolute Pitch Trainer</title>
 <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&display=swap" rel="stylesheet">
 <style>
-  :root { --bg:#0f172a; --card:#1e293b; --muted:#334155; --good:#16a34a; --bad:#dc2626; --text:#e5e7eb; --accent:#fbbf24; --neutral:#94a3b8; }
+  :root { --bg:#0f172a; --card:#1e293b; --muted:#334155; --good:#16a34a; --bad:#dc2626; --text:#e5e7eb; --accent:#fbbf24; --neutral:#94a3b8; --muted2:#2a3a54; }
   *{box-sizing:border-box}
   body{font-family:'Fredoka',sans-serif;background:var(--bg);color:var(--text);margin:0;padding:20px}
   .card{max-width:1060px;margin:auto;background:var(--card);border-radius:20px;padding:20px;box-shadow:0 10px 30px rgba(0,0,0,.15)}
   h1,h2,h3{margin:0 0 8px}
-  button{margin:6px;padding:10px 16px;border-radius:12px;border:none;cursor:pointer;font-size:14px;background:var(--muted);color:var(--text)}
-  button:disabled{opacity:.5;cursor:not-allowed}
+  button{margin:6px;padding:10px 16px;border-radius:12px;border:none;cursor:pointer;font-size:14px;background:var(--muted);color:var(--text);transition:transform .06s ease, filter .12s ease, background .12s ease, border-color .12s ease}
+  button:hover{transform:translateY(-1px)}
+  button:active{transform:translateY(0)}
+  button:disabled{opacity:.55; cursor:not-allowed; background:var(--muted2); border:1.5px dashed #4a5a78}
   input,select{padding:10px 12px;border-radius:12px;border:1px solid var(--muted);background:#0b1224;color:var(--text)}
   select{appearance:none;background-image:linear-gradient(45deg,transparent 50%,var(--text) 50%),linear-gradient(135deg,var(--text) 50%,transparent 50%),linear-gradient(to right,transparent,transparent);
          background-position:calc(100% - 20px) 16px, calc(100% - 14px) 16px, 100% 0; background-size:6px 6px,6px 6px, 2.5em 2.5em; background-repeat:no-repeat}
@@ -22,6 +24,7 @@
   .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
   .note-pad{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:12px}
   .note{min-height:64px;font-size:18px;border-radius:14px}
+  .note.inert{background:#253147 !important; border:1.5px dashed #41506d; cursor:not-allowed}
   .wide{grid-column:1 / -1}
   #barStatus{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:8px}
   #barControls{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
@@ -68,6 +71,13 @@
 
   /* Special exercise strip */
   #specialBar{display:none;align-items:center;justify-content:space-between;background:#22304d;border:1px solid #2f4166;color:#e8efff;padding:8px 12px;border-radius:10px;margin-bottom:10px}
+
+  /* Scope picker CTA styling */
+  .scopeWrap{display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:12px;background:#17223a;border:1px solid #2b3b5c}
+  .scopeWrap:hover{box-shadow:0 0 0 2px rgba(251,191,36,.25) inset}
+  .scopeSelect{background:#0b1224;border:1.5px solid #3b4b6b;border-radius:10px;padding:8px 36px 8px 10px;font-weight:600}
+  .scopeSelect:focus{outline:none; box-shadow:0 0 0 2px #fbbf24}
+  .scopeBtn{background:#fbbf24;color:#0b0f1c;font-weight:700}
 </style>
 </head>
 <body>
@@ -104,16 +114,16 @@
         <div class="tPage" id="tPage3">
           <h3>🎹 Octaves (per study)</h3>
           <ul>
-            <li>Training tones span <strong>three octaves (C4–B6)</strong> and are <strong>randomized</strong> within blocks.</li>
+            <li>Training tones span <strong>three octaves (C4–B6)</strong> and are randomized within blocks.</li>
             <li>This encourages learning the <em>chroma</em> (pitch class), not just pitch height.</li>
-            <li>Tone length: <strong>800 ms</strong>. Pre/post tests also used octaves 4–6, with successive tones &gt;1 octave apart.</li>
+            <li>Tone length: <strong>800 ms</strong>.</li>
           </ul>
         </div>
         <div class="tPage" id="tPage4">
           <h3>🧪 Special exercises (Block 15)</h3>
           <ul>
-            <li>When you’re learning <strong>≥ 5 pitches</strong>, normal <strong>Block 15</strong> is replaced with specials:</li>
-            <li><strong>Exercise A</strong>: 12 trials with feedback — choose <em>Target (pitch)</em> vs <em>Other (OOB)</em>.</li>
+            <li>When you’re learning <strong>≥ 5 pitches</strong>, Block 15 becomes specials:</li>
+            <li><strong>Exercise A</strong>: 12 trials with feedback — <em>Target (pitch)</em> vs <em>Other (OOB)</em>.</li>
             <li><strong>Exercise B</strong>: 22 trials without feedback — same task.</li>
           </ul>
         </div>
@@ -149,10 +159,13 @@
       <button id="resetLockout">⚡ Reset lockout/timer</button>
       <button id="menuReset">⟲ Reset (factory)</button>
     </div>
+
+    <!-- Scope looks obviously changeable now -->
     <div class="row" style="margin-top:8px;gap:12px">
-      <div class="pill">Current scope:
-        <select id="setSizeSelect" style="margin-left:6px;background:var(--muted);color:var(--text);border:none;border-radius:8px;padding:6px 28px 6px 8px"></select>
-        <button id="applySetBtn">Go to start</button>
+      <div class="scopeWrap">
+        <span style="opacity:.9">Current scope:</span>
+        <select id="setSizeSelect" class="scopeSelect"></select>
+        <button id="applySetBtn" class="scopeBtn">Change…</button>
       </div>
     </div>
 
@@ -337,7 +350,11 @@ function activeDuration(session){
 /* ------------------ FLAGS/TIMERS ------------------ */
 let sessionActive=false, paused=false;
 let rtTimer=null, autoTimer=null, tickId=null;
-function stopAllTimers(){ if(tickId){ clearInterval(tickId); tickId=null; } if(rtTimer){ clearTimeout(rtTimer); rtTimer=null; } if(autoTimer){ clearTimeout(autoTimer); autoTimer=null; } }
+function stopAllTimers(){ if(tickId){ clearInterval(tickId); tickId=null; } if(rtTimer){ clearTimeout(rtTimer); rtTimer=null; } if(autoTimer){ clearTimeout(autoTimer); autoTimer=null; }
+
+/* one-shot suppression so strict modal doesn't appear right after specials */
+}
+let suppressStrictOnce=false;
 
 /* ------------------ SANITY ------------------ */
 function sealDanglingSession(){
@@ -404,34 +421,42 @@ async function resumeCtx(){ try{ const ctx=getCtx(); if(ctx.state==='suspended')
 async function loadBuffer(url){ if(BUF_CACHE.has(url)) return BUF_CACHE.get(url); const res=await fetch(url); if(!res.ok) throw new Error('Missing audio '+url); const arr=await res.arrayBuffer(); const buf=await getCtx().decodeAudioData(arr); BUF_CACHE.set(url,buf); return buf; }
 async function closeAudio(){ try{ if(ACTX){ await ACTX.close(); } }catch(_){} finally{ ACTX=null; BUF_CACHE.clear(); } }
 
+/* Always play a tone (sample -> oscillator -> fallback) */
 async function playSample(note){
-  await resumeCtx();
-  const ctx = getCtx();
-  const url = `${AUDIO_PIANO}/${note}.mp3`;
   try{
-    const buf = await loadBuffer(url);
-    const src = ctx.createBufferSource();
-    src.buffer = buf;
-    const g = ctx.createGain(); g.gain.value = 1;
-    src.connect(g).connect(ctx.destination);
-    const t = ctx.currentTime;
-    src.start(t); src.stop(t + TONE_MS/1000);
-  }catch(_){
+    await resumeCtx();
+    const ctx = getCtx();
     try{
-      const idx={C:0,Db:1,D:2,Eb:3,E:4,F:5,Gb:6,G:7,Ab:8,A:9,Bb:10,B:11};
-      const m=/^([A-G](?:b)?)(\d)$/.exec(note);
-      const pc=m?m[1]:'A', o=m?+m[2]:4;
-      const semis=idx[pc]+(o-4)*12;
-      const freq=440*Math.pow(2,(semis-9)/12);
-      const osc = ctx.createOscillator(); const g = ctx.createGain();
-      osc.type='sine'; osc.frequency.value=freq;
-      const t0 = ctx.currentTime;
-      g.gain.setValueAtTime(0.0001, t0);
-      g.gain.linearRampToValueAtTime(0.25, t0 + 0.01);
-      g.gain.exponentialRampToValueAtTime(0.0001, t0 + TONE_MS/1000);
-      osc.connect(g).connect(ctx.destination);
-      osc.start(t0); osc.stop(t0 + TONE_MS/1000);
+      const url = `${AUDIO_PIANO}/${note}.mp3`;
+      const buf = await loadBuffer(url);
+      const src = ctx.createBufferSource();
+      src.buffer = buf;
+      const g = ctx.createGain(); g.gain.value = 1;
+      src.connect(g).connect(ctx.destination);
+      const t = ctx.currentTime;
+      src.start(t); src.stop(t + TONE_MS/1000);
+      return;
     }catch(_e){}
+    const m=/^([A-G](?:b)?)(\d)$/.exec(note);
+    const pc=m?m[1]:'A', o=m?+m[2]:4;
+    const idx={C:0,Db:1,D:2,Eb:3,E:4,F:5,Gb:6,G:7,Ab:8,A:9,Bb:10,B:11};
+    const semis=(idx[pc]??9)+(o-4)*12;
+    const freq=440*Math.pow(2,(semis-9)/12);
+    const osc = ctx.createOscillator(); const g = ctx.createGain();
+    osc.type='sine'; osc.frequency.value=freq;
+    const t0 = ctx.currentTime;
+    g.gain.setValueAtTime(0.0001, t0);
+    g.gain.linearRampToValueAtTime(0.25, t0 + 0.01);
+    g.gain.exponentialRampToValueAtTime(0.0001, t0 + TONE_MS/1000);
+    osc.connect(g).connect(ctx.destination);
+    osc.start(t0); osc.stop(t0 + TONE_MS/1000);
+  }catch(e){
+    try{
+      const ctx=getCtx(); const osc=ctx.createOscillator(); const g=ctx.createGain();
+      osc.type='sine'; osc.frequency.value=440;
+      const t0=ctx.currentTime; g.gain.setValueAtTime(0.0001,t0); g.gain.linearRampToValueAtTime(0.2,t0+0.01); g.gain.exponentialRampToValueAtTime(0.0001,t0+0.3);
+      osc.connect(g).connect(ctx.destination); osc.start(t0); osc.stop(t0+0.3);
+    }catch(_){}
   }
 }
 
@@ -481,9 +506,7 @@ function currentOOBs(setSize){
   if(!learned.includes(dn2) && !learned.includes(dn1)) out.push(PC[dn2]);
   return out;
 }
-/* Per study: always randomize across three octaves 4–6 (C4–B6) */
 function currentOctaves(){ return [4,5,6]; }
-
 function rand(a){ return a[Math.floor(Math.random()*a.length)]; }
 function pcLabel(pc){ return PC_LABEL[pc] || pc; }
 
@@ -505,7 +528,7 @@ function paintNotes(){
   const pad=byId('notePad'); if(!pad) return; pad.innerHTML='';
   const set=setFromIndex(state.levelIndex);
   const learned = new Set(trainedSet(set));
-  const sorted = PC.filter(pc=> learned.has(pc)); // chromatic order for layout
+  const sorted = PC.filter(pc=> learned.has(pc));
   for(const pc of sorted){
     const b=document.createElement('button');
     b.textContent=pcLabel(pc);
@@ -531,16 +554,24 @@ function maybeRunShepard(){
   return Promise.resolve();
 }
 
-/* ---------- Specials at BLOCK 15 ---------- */
-function chooseWeakestPitchFromRecent(n=15){
+/* ---------- Specials at BLOCK 15 (weakest from last 15 blocks) ---------- */
+function chooseWeakestFromLastBlocks(nBlocks=15){
   const set = setFromIndex(state.levelIndex);
+  const curBlock = blockFromIndex(state.levelIndex);
+  const from = Math.max(1, curBlock - (nBlocks - 1));
   const trained = new Set(trainedSet(set));
-  const recent = (state.trials||[]).filter(t=> t.block>0 && t.block<=20).slice(-n);
-  const stats = new Map(); trained.forEach(pc=> stats.set(pc, {ok:0,n:0}));
-  for(const t of recent){ if(!trained.has(t.pc)) continue; const s=stats.get(t.pc); s.n++; if(t.correct) s.ok++; }
-  let weakest = Array.from(trained)[Math.max(0, trained.size-1)], worst = Infinity;
-  for(const [pc,s] of stats){ const acc = s.n? s.ok/s.n : 0; if(acc < worst){ worst=acc; weakest=pc; } }
-  return weakest;
+  const windowTrials = (state.trials||[]).filter(t =>
+    t.set === set && t.block >= from && t.block <= curBlock && t.block >= 1 && t.block <= 20
+  );
+  const stats = new Map();
+  for(const pc of trained) stats.set(pc, {ok:0, n:0, order:UNLOCK_ORDER.indexOf(pc)});
+  for(const t of windowTrials){ if(!trained.has(t.pc)) continue; const s=stats.get(t.pc); s.n++; if(t.correct) s.ok++; }
+  let pick=null;
+  for(const [pc,s] of stats){
+    if(pick===null) pick={pc,...s};
+    else if(s.ok < pick.ok || (s.ok===pick.ok && s.n > pick.n) || (s.ok===pick.ok && s.n===pick.n && s.order < pick.order)) pick={pc,...s};
+  }
+  return pick ? pick.pc : UNLOCK_ORDER[Math.min(set-1, UNLOCK_ORDER.length-1)];
 }
 function startSpecialAtBlock15(){
   const set = setFromIndex(state.levelIndex);
@@ -549,7 +580,7 @@ function startSpecialAtBlock15(){
   if(state.specialRanForLevel === state.levelIndex) return false;
   state.specialRanForLevel = state.levelIndex; save();
 
-  const targetPc = chooseWeakestPitchFromRecent(15);
+  const targetPc = chooseWeakestFromLastBlocks(15);
   special = {mode:'A', targetPc, total:12, done:0, withFeedback:true, correct:0};
   showSpecialUI(true, `Special A — focus: ${pcLabel(targetPc)}`);
   text('btnTarget', `Target (${pcLabel(targetPc)})`);
@@ -595,7 +626,10 @@ function endSpecialOrAdvance(){
       const n  = trials.length;
       const pct = n ? Math.round((ok/n)*1000)/10 : 0;
       alert(`🎉 Hooray! You identified ${pcLabel(special.targetPc)} at ${pct}% accuracy.`);
-      special = null; showSpecialUI(false); text('promptPill','Specials done — press Play to continue');
+      special = null; showSpecialUI(false);
+      text('promptPill','Specials done — press Play to continue');
+      /* one-shot suppress strict modal after specials */
+      suppressStrictOnce = true;
     }
   }
 }
@@ -613,7 +647,7 @@ function answerSpecial(userSaysTarget){
   setTimeout(()=> nextSpecialTrial(), Math.max(500, delayMs));
 }
 
-/* -------- Normal trials (guess & OOB) -------- */
+/* -------- Normal trials -------- */
 function guess(pc){
   if(!sessionActive || paused || shepRunning || special) return;
   if(!currentNote){ return; }
@@ -636,11 +670,14 @@ function chooseOOB(){
   scheduleAuto();
 }
 
-/* Normal flow driving */
+/* Driving */
 function scheduleAuto(){ if(autoTimer){ clearTimeout(autoTimer); autoTimer=null; } if(autoNext && sessionActive && !paused && !shepRunning && !special){ autoTimer = setTimeout(()=> nextTrial(true), delayMs); } }
 async function nextTrial(forceNew=false){
   if(!sessionActive || paused || shepRunning || special) return;
   if(inFlightTrial) return;
+
+  /* clear the one-shot strict suppression as soon as normal play resumes */
+  suppressStrictOnce = false;
 
   if(startSpecialAtBlock15()) return;
 
@@ -997,7 +1034,11 @@ function wireOnce(){
 
 /* ------------------ FLAPPY ------------------ */
 let fCtx, flappyRAF=null, running=false, score=0, pipes=[], bird, pipeTimer=0, lastTs=null;
-const FLAPPY = { gravity:900, flap:-380, baseSpeed:140, maxSpeed:260, speed:140, gap:140, minGap:100, spawnEvery:1.20, width:52 };
+
+/* Flappy now: start with bigger gap, shrink over first 5 pipes, then keep constant.
+   Speed still scales with score. */
+const FLAPPY = { gravity:900, flap:-380, baseSpeed:140, maxSpeed:260, speed:140, baseGap:140, gap:140, introPipes:5, introExtra:60, spawnEvery:1.20, width:52 };
+
 function openFlappyFromMenu(){ if(isLocked()) openFlappyModal(); else alert('Flappy is intended for lockout/rewards.'); }
 function openFlappyModal(){ byId('flappyModal').style.display='flex'; const c=byId('flappyCanvas'); if(!c) return; fCtx=c.getContext('2d'); resetFlappy(); attachFlappyControls(); }
 function startFlappyReward(){ if(sessionActive && !paused){ pauseStart('flappy'); } clearTimeout(rtTimer); rtTimer=null; clearTimeout(autoTimer); autoTimer=null; openFlappyModal(); }
@@ -1010,9 +1051,12 @@ function closeFlappy(){
     text('promptPill','Flappy over — press Play to continue');
   }
 }
-function resetFlappy(){ const cnv=byId('flappyCanvas'); if(!cnv) return; bird={x:60,y:cnv.height/2,vy:0,wing:0}; pipes=[]; score=0; pipeTimer=0; lastTs=null; FLAPPY.speed=FLAPPY.baseSpeed; text('flappyScore',`Score: 0 • Best: ${state.flappyHighScore||0}`); }
+function resetFlappy(){ const cnv=byId('flappyCanvas'); if(!cnv) return; bird={x:60,y:cnv.height/2,vy:0,wing:0}; pipes=[]; score=0; pipeTimer=0; lastTs=null; FLAPPY.speed=FLAPPY.baseSpeed; FLAPPY.gap=FLAPPY.baseGap + FLAPPY.introExtra; FLAPPY.introPipes=5; text('flappyScore',`Score: 0 • Best: ${state.flappyHighScore||0}`); }
 function flap(){ bird.vy = FLAPPY.flap; const pc = rand(PC); const note = `${pc}${rand(currentOctaves())}`; playSample(note); }
-function progressiveDifficulty(){ const target = FLAPPY.baseSpeed + Math.min(Math.floor(score/5)*18, FLAPPY.maxSpeed - FLAPPY.baseSpeed); FLAPPY.speed = target; const g0=140, step=6, every=8; FLAPPY.gap = Math.max(FLAPPY.minGap, g0 - Math.min(Math.floor(score/every)*step, 40)); }
+function progressiveDifficulty(){ // only speed scales; gap remains constant after intro
+  const target = FLAPPY.baseSpeed + Math.min(Math.floor(score/5)*18, FLAPPY.maxSpeed - FLAPPY.baseSpeed);
+  FLAPPY.speed = target;
+}
 function drawBird(){ const ctx=fCtx; if(!ctx) return; const body=getComputedStyle(document.documentElement).getPropertyValue('--accent')||'#fbbf24'; const wingCol='#ffd166'; const outline='#111';
   ctx.save();
   const tilt=Math.max(-0.6,Math.min(0.6,bird.vy/380)); ctx.translate(bird.x,bird.y); ctx.rotate(tilt);
@@ -1029,8 +1073,18 @@ function drawPipes(){ const ctx=fCtx; if(!ctx) return; const col=getComputedStyl
 function spawnPipe(){
   const cnv=byId('flappyCanvas'); if(!cnv) return;
   const h=cnv.height, m=40;
+
+  // intro ramp: linearly reduce gap to baseGap across first 5 pipes
+  if(FLAPPY.introPipes > 0){
+    const k = FLAPPY.introPipes; // 5..1
+    const extraNow = Math.round(FLAPPY.introExtra * (k/5));
+    FLAPPY.gap = FLAPPY.baseGap + extraNow;
+    FLAPPY.introPipes--;
+    if(FLAPPY.introPipes === 0) FLAPPY.gap = FLAPPY.baseGap; // lock it
+  }
+
   const gapY=Math.max(m,Math.min(h-m-FLAPPY.gap,Math.random()*(h-FLAPPY.gap-2*m)))+FLAPPY.gap/2;
-  pipes.push({x: cnv.width, gapY: gapY, passed:false}); /* <-- fixed colon syntax */
+  pipes.push({x: cnv.width, gapY: gapY, passed:false});
 }
 function step(ts){
   if(!running) return;
@@ -1071,7 +1125,7 @@ function detachFlappyControls(){
 
 /* ------------------ STRICT MODAL + NAV GUARDS ------------------ */
 let strictModalPending=false;
-function openStrictModal(){ showFlex('strictModal'); setTimeout(()=> byId('btnStrictResume')?.focus(), 0); }
+function openStrictModal(){ if(suppressStrictOnce){ suppressStrictOnce=false; return; } showFlex('strictModal'); setTimeout(()=> byId('btnStrictResume')?.focus(), 0); }
 function closeStrictModal(){ hide('strictModal'); strictModalPending=false; }
 function reconcileAwayTime(){
   const now = Date.now();
@@ -1084,10 +1138,10 @@ function reconcileAwayTime(){
 }
 document.addEventListener('visibilitychange', ()=>{
   if(document.hidden && sessionActive && !paused){ pauseStart('hidden'); strictModalPending = true; }
-  if(!document.hidden){ reconcileAwayTime(); if(strictModalPending) openStrictModal(); }
+  if(!document.hidden){ reconcileAwayTime(); if(strictModalPending && !suppressStrictOnce) openStrictModal(); strictModalPending=false; }
 });
 window.addEventListener('blur', ()=>{ if(sessionActive && !paused){ pauseStart('blur'); strictModalPending = true; } });
-window.addEventListener('focus', ()=>{ reconcileAwayTime(); if(strictModalPending) openStrictModal(); });
+window.addEventListener('focus', ()=>{ reconcileAwayTime(); if(strictModalPending && !suppressStrictOnce) openStrictModal(); strictModalPending=false; });
 window.addEventListener('pagehide', ()=>{ try{ if(sessionActive && !paused){ pauseStart('pagehide'); strictModalPending = true; } state.lastSeen = Date.now(); save(); }catch(_){}});
 
 /* --- beforeunload guard --- */
